@@ -1,0 +1,37 @@
+{
+  "applicationId": "js.neutralino.zero",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "documentRoot": "/react-src/dist",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "nativeAllowList": [
+    "app.*",
+    "filesystem.*",
+    "storage.*",
+    "os.*"
+  ],
+  "modes": {
+    "window": {
+      "title": "catchsup",
+      "width": 800,
+      "height": 500,
+      "minWidth": 400,
+      "minHeight": 200,
+      "icon": "/react-src/public/logo192.png"
+    }
+  },
+  "cli": {
+    "binaryName": "catchsup",
+    "resourcesPath": "/react-src/dist",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/neutralino.js",
+    "binaryVersion": "4.10.0",
+    "clientVersion": "3.8.2",
+    "frontendLibrary": {
+      "patchFile": "/react-src/index.html",
+      "devUrl": "http://localhost:5173"
+    }
+  }
+}
