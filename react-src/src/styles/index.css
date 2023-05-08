@@ -1,8 +1,37 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
 
-  color-scheme: light dark;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h7 {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/*
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+
+  color-scheme: dark light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -34,6 +63,17 @@ h1 {
   line-height: 1.1;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h7 {
+  margin: 0;
+  padding: 0;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -58,12 +98,6 @@ button.clear {
   padding: 0.6em 0.7em;
 }
 
-.flex-right {
-  display: flex;
-  align-items: center;;
-  justify-content: end;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -76,3 +110,5 @@ button.clear {
     background-color: #f9f9f9;
   }
 }
+
+*/

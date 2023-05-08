@@ -1,0 +1,12 @@
+
+.goal-list {
+    padding: 10px;
+}
+
+.goal-list-entry{
+    display: flex;
+}
+.goal-list-entry:hover {
+    border-left: 2px solid #333;
+    cursor: pointer;
+}

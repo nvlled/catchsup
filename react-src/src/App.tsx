@@ -1,12 +1,14 @@
-import { useEffect, useRef } from "react";
-//import reactLogo from "./assets/react.svg";
-//import viteLogo from "/vite.svg";
+import "normalize.css";
+import "./styles/layout.css";
 import "./styles/App.css";
-import { filesystem } from "@neutralinojs/lib";
+
 import { useOnMount } from "./lib/reactext";
 import GoalList from "./GoalList";
 import { Actions, useAppStore } from "./lib/state";
-import { GoalCreator } from "./GoalCreator";
+import GoalView from "./GoalView";
+import { GoalEditor } from "./GoalEditor";
+
+let initialized = false;
 
 function App() {
   /*
@@ -34,29 +36,49 @@ function App() {
   */
 
   useOnMount(() => {
+    if (initialized) return;
     console.log("app mount");
+
     (async () => {
       await Actions.init();
+      initialized = true;
     })();
   });
 
-  const [appState, goals] = useAppStore((state) => [state.page, state.goals]);
+  const [page, goals, viewGoal] = useAppStore((state) => [
+    state.page,
+    state.goals,
+    state.goals.find((e) => e.id === state.activeTraining?.goalID),
+  ]);
 
   return (
     <>
-      {appState === "home" ? (
+      {page === "home" ? (
         <>
-          <button onClick={() => Actions.changePage("create-goal")}>
-            add goal
-          </button>
+          <div className="flex-right">
+            <button onClick={() => Actions.changePage("create-goal")}>
+              + add goal
+            </button>
+          </div>
+          <br />
           <GoalList goals={goals} />
         </>
-      ) : appState === "create-goal" ? (
+      ) : page === "create-goal" ? (
         <>
-          <GoalCreator />
+          <div className="flex-right">
+            <button
+              className="clear"
+              onClick={() => Actions.changePage("home")}
+            >
+              ← back
+            </button>
+          </div>
+          <GoalEditor onSubmit={handleGoalCreate} />
         </>
+      ) : page === "view-goal" ? (
+        <GoalView goal={viewGoal} />
       ) : (
-        <div>invalid appstate {appState}</div>
+        <div>invalid appstate {page}</div>
       )}
 
       {/*
@@ -65,6 +87,10 @@ function App() {
     */}
     </>
   );
+
+  function handleGoalCreate() {
+    Actions.changePage("home");
+  }
 }
 
 export default App;

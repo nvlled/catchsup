@@ -1,5 +1,5 @@
 import { assert, assertType, describe, it } from "vitest";
-import { Goal } from "../src/lib/goal";
+import { Goal, SetOfWeekDays } from "../src/lib/goal";
 import {
   DateNumber,
   TimeNumber,
@@ -34,7 +34,11 @@ describe("Goal", () => {
     goal.updatedTime = makeTime(day1, 900);
     goal.trainingTime = "morning";
     goal.schedulingType = "weekly";
-    weekly.dayOfWeeks = ["monday", "tuesday", "friday"];
+    weekly.dayOfWeeks = {
+      monday: true,
+      tuesday: true,
+      friday: true,
+    } as SetOfWeekDays;
 
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 930)));
     assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 910)));
@@ -52,7 +56,7 @@ describe("Goal", () => {
     goal.updatedTime = makeTime(day1, 900);
     goal.trainingTime = "morning";
     goal.schedulingType = "monthly";
-    monthly.dayOfMonths = [1, 2, 3, 4, 10];
+    monthly.dayOfMonths = { 1: true, 2: true, 3: true, 4: true, 10: true };
 
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 930)));
     assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 910)));
@@ -123,13 +127,18 @@ describe("Goal", () => {
     } = goal;
 
     goal.schedulingType = "weekly";
-    weekly.dayOfWeeks = ["monday", "tuesday", "thursday", "friday"];
+    weekly.dayOfWeeks = {
+      monday: true,
+      tuesday: true,
+      thursday: true,
+      friday: true,
+    } as SetOfWeekDays;
 
     assert.equal(Goal.countDueDays(goal, day1, day2), 1);
     assert.equal(Goal.countDueDays(goal, day2, day5), 3);
 
     goal.schedulingType = "monthly";
-    monthly.dayOfMonths = [1, 3, 5];
+    monthly.dayOfMonths = { 1: true, 3: true, 5: true };
 
     assert.equal(Goal.countDueDays(goal, day1, day2), 1);
     assert.equal(Goal.countDueDays(goal, day2, day5), 2);

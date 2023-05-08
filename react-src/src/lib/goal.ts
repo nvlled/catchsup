@@ -16,15 +16,23 @@ export interface TrainingLog {
   notes?: string;
 }
 
+export type GoalID = number;
+
+export type GoalDueState = "due-now" | "due-today" | "done" | "free";
+
+export type SchedulingType = "daily" | "weekly" | "monthly";
+
+export type SetOfWeekDays = Record<WeekDay, boolean>;
+export type SetOfDates = Record<number, boolean>;
+
 export interface Goal {
-  id: number;
+  id: GoalID;
   title: string;
-  desc: string | null;
+  desc: string;
 
   createdTime: UnixTimestamp;
   updatedTime: UnixTimestamp;
   lastSkipCheck: DateNumber;
-  //lastConfigEdit: DateNumber;
 
   trainingTime: TrainingTime;
 
@@ -40,16 +48,16 @@ export interface Goal {
     scale: number;
   };
 
-  schedulingType: "daily" | "weekly" | "monthly";
+  schedulingType: SchedulingType;
   schedulingData: {
     daily: {
       interval: number;
     };
     weekly: {
-      dayOfWeeks: WeekDay[];
+      dayOfWeeks: SetOfWeekDays;
     };
     monthly: {
-      dayOfMonths: number[];
+      dayOfMonths: SetOfDates;
     };
   };
   schedulingOptions: {
@@ -87,7 +95,7 @@ export const Goal = {
 
       trainingDuration: 15,
       durationOptions: {
-        autoAdjust: true,
+        autoAdjust: false,
 
         durationRange: {
           min: 15,
@@ -103,15 +111,15 @@ export const Goal = {
           interval: 1,
         },
         weekly: {
-          dayOfWeeks: [],
+          dayOfWeeks: {} as SetOfWeekDays,
         },
         monthly: {
-          dayOfMonths: [],
+          dayOfMonths: {} as SetOfDates,
         },
       },
       schedulingOptions: {
         daily: {
-          autoAdjust: true,
+          autoAdjust: false,
           scale: 1,
 
           dayIntervalRange: {
@@ -195,7 +203,7 @@ export const Goal = {
 
         for (let day = 0; day < numDays; day++) {
           const w = Week.fromDate(date);
-          if (weekdays.includes(w)) {
+          if (weekdays[w]) {
             numDue++;
           }
           date.setDate(date.getDate() + 1);
@@ -211,7 +219,7 @@ export const Goal = {
         let numDue = 0;
 
         for (let day = 0; day < numDays; day++) {
-          if (dayOfMonths.includes(date.getDate())) {
+          if (dayOfMonths[date.getDate()]) {
             numDue++;
           }
           date.setDate(date.getDate() + 1);
@@ -239,7 +247,7 @@ export const Goal = {
 
         for (let n = 0; n <= 7; n++) {
           const w = Week.fromDate(date);
-          if (weekdays.includes(w)) {
+          if (weekdays[w]) {
             return DateNumber.fromDate(date);
           }
           date.setDate(date.getDate() - 1);
@@ -253,7 +261,7 @@ export const Goal = {
         const date = DateNumber.toDate(DateNumber.current());
 
         for (let n = 0; n <= 31; n++) {
-          if (days.includes(date.getDate())) {
+          if (days[date.getDate()]) {
             return DateNumber.fromDate(date);
           }
           date.setDate(date.getDate() - 1);
@@ -293,11 +301,11 @@ export const Goal = {
         const w = Week.fromUnixTimestamp(time);
 
         if (!w) return false;
-        return weekdays.includes(w);
+        return weekdays[w];
       }
       case "monthly": {
         const days = goal.schedulingData.monthly.dayOfMonths;
-        return days.includes(UnixTimestamp.toDate(time).getDate());
+        return days[UnixTimestamp.toDate(time).getDate()];
       }
       case "daily": {
         const d = UnixTimestamp.toDateNumber(time);
@@ -333,5 +341,19 @@ export const Goal = {
 
     const trainingTime = goal.trainingTime;
     return TrainingTime.inRange(trainingTime, now);
+  },
+
+  checkDue(goal: Goal): GoalDueState {
+    const now = UnixTimestamp.current();
+    if (!Goal.isDueOnDay(goal, now)) {
+      return "free";
+    }
+
+    const trainingTime = goal.trainingTime;
+    if (!TrainingTime.inRange(trainingTime, now)) {
+      return "due-today";
+    }
+
+    return "due-now";
   },
 };

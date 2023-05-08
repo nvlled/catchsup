@@ -1,15 +1,3 @@
-// TODO: figure out the best way to
-// use zustand and neutralino's API together
-// it's looking kind of messy
-// so I'm going to create an type abstraction
-// here for neutralino's storage API
-// I think I can just use zustand hooks directly
-// and remove AppData
-
-// Actually this way makes more sense
-// https://docs.pmnd.rs/zustand/guides/practice-with-no-store-actions
-// just read the docs first
-
 import { storage } from "@neutralinojs/lib";
 import { StateStorage } from "zustand/middleware";
 

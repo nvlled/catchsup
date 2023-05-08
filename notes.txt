@@ -1,0 +1,83 @@
+
+Goal schedule form
+
+What do you want to do?
+|                       |
+
+Any related information or notes about it
+|                       |
+|                       |
+|                       |
+|                       |
+
+What days do you want to do this?
+  v every N day
+  [ ] auto adjust duration (?) 
+
+What time?
+  v around time |8:30|
+  [ ] auto adjust interval (?)
+
+
+----
+v every N days
+  day interval |1| (?)
+  [ ] auto adjust interval (?)
+
+v weekly 
+  Mon Tue Wed Thurs Fri Sat Sun
+
+v monthly
+  1  2  3  4  5  6  7
+  8  9  10 11 12 13 14
+  15 16 17 18 19 20 21
+  22 23 24 25 26 27 28
+  29 30 31
+
+----
+
+What days do you want to do this?
+v every N day
+  weekly
+  monthly
+
+What time?
+v morning
+  afternoon
+  evening
+  around time
+
+----
+
+What time of day do you want to do this?
+v around time |8:30|
+
+What days do you want to do this?
+v every N day
+[/] auto adjust interval (?)
+    interval range [] to []
+    
+
+training duration |15| minutes
+[/] auto adjust duration (?) 
+    duration range [] to []
+
+hover on (?) to show title popup text
+
+--------------------------------
+
+goals = [
+    {title: "a", sched: "mondays 8:00"},
+    {title: "b", sched: "every 3 days morning"},
+    {title: "c", sched: "once a month morning"},
+]
+
+date: monday 6:00
+dueGoals = state.goals.filter(Goal.isDueNow)
+
+I could let it poll for due goals for every 3 minutes,
+then send notification if there is at least one due.
+If there are several goals, just send one notification
+for each poll.
+
+Don't send notification when window is focused.

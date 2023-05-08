@@ -1,0 +1,17 @@
+
+.goal-editor input[type=number]{
+    max-width: 50px;
+}
+
+.goal-editor .weekday-selector> *{
+    display: inline-block;
+    width: 50px;
+    margin: 10px;
+}
+
+.goal-editor .date-selector > *{
+    display: inline-block;
+    width: 50px;
+    margin: 10px;
+    text-align: right;
+}
