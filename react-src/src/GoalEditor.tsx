@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 import { WeekDay } from "./lib/datetime";
 import { Goal, GoalID, SchedulingType } from "./lib/goal";
 import { useOnMount } from "./lib/reactext";
@@ -6,8 +6,10 @@ import { Actions } from "./lib/state";
 import { ArrayUtil } from "./lib/util";
 import "./styles/GoalEditor.css";
 import { produce } from "immer";
-
-//export interface Props {}
+import { TimeRangeLabel } from "./lib/datetime";
+import { TimeNumber } from "./lib/datetime";
+import { Space } from "./components";
+import { Producer } from "./lib/immerext";
 
 const schedulingTypeLabels: Record<SchedulingType, string> = {
   daily: "daily",
@@ -35,6 +37,12 @@ export interface Props {
   goal?: Goal;
   onSubmit: (goalID: GoalID) => void;
 }
+
+interface SubProps {
+  goal: Goal;
+  onChange: (goal: Goal) => void;
+}
+
 export function GoalEditor({ goal, onSubmit }: Props) {
   const [state, setState] = useState<State>({ type: "ready" });
   const [editedGoal, setEditedGoal] = useState<Goal>(Goal.createEmpty());
@@ -53,7 +61,12 @@ export function GoalEditor({ goal, onSubmit }: Props) {
     <div className="goal-editor">
       <div>
         <h2>What do you want to do?</h2>
-        <input ref={titleRef} placeholder="title" onChange={onInput} />
+        <input
+          ref={titleRef}
+          name="title"
+          placeholder="title"
+          onChange={onInput}
+        />
       </div>
       <br />
       <br />
@@ -64,9 +77,15 @@ export function GoalEditor({ goal, onSubmit }: Props) {
           onChange={onInput}
           placeholder="description"
           rows={5}
-          cols={60}
         ></textarea>
       </div>
+      <br />
+      <div>
+        <h2>How long do you want to do this?</h2>
+        <TimeDurationEditor goal={editedGoal} onChange={setEditedGoal} />
+        <small>*note: you should start small first</small>
+      </div>
+      <br />
       <div>
         <h2>What days do you want to do this?</h2>
         <DaySchedEditor goal={editedGoal} onChange={setEditedGoal} />
@@ -78,18 +97,27 @@ export function GoalEditor({ goal, onSubmit }: Props) {
         <TimeSchedEditor goal={editedGoal} onChange={setEditedGoal} />
       </div>
       <br />
-      <button
-        onClick={handleSubmit}
-        disabled={!["ready", "error"].includes(state.type)}
-      >
-        {editedGoal.id != 0 ? "save" : "create"}
-      </button>
+      <div className="flex-between">
+        <button
+          onClick={handleSubmit}
+          disabled={!["ready", "error"].includes(state.type)}
+        >
+          {editedGoal.id != 0 ? "save" : "create"}
+        </button>
+        {goal && (
+          <button className="goal-editor-delete-button" onClick={handleDelete}>
+            delete
+          </button>
+        )}
+      </div>
       &nbsp;
       {state.type === "error" ? (
         <span>{state.message}</span>
       ) : state.type === "done" ? (
-        <span>goal created!?!?</span>
+        <span>your changes have been saved</span>
       ) : null}
+      <hr />
+      <small>Note: the schedule is only for reminder notifications you</small>
     </div>
   );
 
@@ -126,29 +154,28 @@ export function GoalEditor({ goal, onSubmit }: Props) {
       onSubmit(goal.id);
     }, 512);
   }
+
+  function handleDelete() {
+    if (editedGoal && confirm("Delete this?")) {
+      Actions.deleteGoal(editedGoal);
+    }
+  }
 }
 
-export function DaySchedEditor({
-  goal,
-  onChange,
-}: {
-  goal: Goal;
-  onChange: (goal: Goal) => void;
-}) {
+function DaySchedEditor({ goal, onChange }: SubProps) {
+  const produceChange = (fn: Producer<Goal>) =>
+    onChange(
+      produce(goal, (draft) => {
+        fn(draft);
+      })
+    );
+
   const {
     schedulingType: schedType,
     schedulingData: schedData,
     schedulingOptions: schedOptions,
   } = goal;
   const { daily: dailyOptions } = schedOptions;
-
-  function produceChange(fn: (draft: Goal) => void) {
-    onChange(
-      produce(goal, (draft) => {
-        fn(draft);
-      })
-    );
-  }
 
   return (
     <div>
@@ -159,7 +186,7 @@ export function DaySchedEditor({
           </option>
         ))}
       </select>
-      <div className="m5">
+      <div className="m2">
         {schedType === "daily" ? (
           <div>
             day interval{" "}
@@ -169,12 +196,14 @@ export function DaySchedEditor({
               onChange={handleChangeInterval}
             />
             <br />
-            <input
-              type="checkbox"
-              checked={dailyOptions.autoAdjust}
-              onChange={handleChangeAutoAdjust}
-            />
-            auto adjust interval
+            <label>
+              <input
+                type="checkbox"
+                checked={dailyOptions.autoAdjust}
+                onChange={handleChangeAutoAdjust}
+              />
+              auto adjust interval
+            </label>
             {dailyOptions.autoAdjust && (
               <div>
                 interval range: from
@@ -233,7 +262,7 @@ export function DaySchedEditor({
     </div>
   );
 
-  function handleChangeSchedType(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleChangeSchedType(e: ChangeEvent<HTMLSelectElement>) {
     onChange(
       produce(goal, (draft) => {
         draft.schedulingType = e.target.value as SchedulingType;
@@ -261,36 +290,28 @@ export function DaySchedEditor({
     );
   }
 
-  function handleChangeInterval(
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void {
+  function handleChangeInterval(event: ChangeEvent<HTMLInputElement>): void {
     onChange(
       produce(goal, (draft) => {
         draft.schedulingData.daily.interval = event.target.valueAsNumber || 1;
       })
     );
   }
-  function handleChangeMinInterval(
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void {
+  function handleChangeMinInterval(event: ChangeEvent<HTMLInputElement>): void {
     produceChange((draft) => {
       draft.schedulingOptions.daily.dayIntervalRange.min =
         event.target.valueAsNumber || 1;
     });
   }
 
-  function handleChangeMaxInterval(
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void {
+  function handleChangeMaxInterval(event: ChangeEvent<HTMLInputElement>): void {
     produceChange((draft) => {
       draft.schedulingOptions.daily.dayIntervalRange.max =
         event.target.valueAsNumber || 1;
     });
   }
 
-  function handleChangeAutoAdjust(
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void {
+  function handleChangeAutoAdjust(event: ChangeEvent<HTMLInputElement>): void {
     produceChange(
       (draft) =>
         (draft.schedulingOptions.daily.autoAdjust = event.target.checked)
@@ -298,12 +319,155 @@ export function DaySchedEditor({
   }
 }
 
-export function TimeSchedEditor({
-  goal,
-  onChange,
-}: {
-  goal: Goal;
-  onChange: (goal: Goal) => void;
-}) {
-  return <div>TODO {goal.id}</div>;
+function TimeSchedEditor({ goal, onChange }: SubProps) {
+  const produceChange = (fn: Producer<Goal>) =>
+    onChange(
+      produce(goal, (draft) => {
+        fn(draft);
+      })
+    );
+
+  const { trainingTime } = goal;
+
+  type Label = "around specific time" | TimeRangeLabel;
+  const label: Label =
+    typeof trainingTime === "number"
+      ? "around specific time"
+      : !Array.isArray(trainingTime)
+      ? trainingTime
+      : "morning";
+
+  const options: Label[] = [
+    "morning",
+    "afternoon",
+    "evening",
+    "late evening",
+    "late at night",
+    "around specific time",
+  ];
+
+  let timeInput = <div />;
+  if (typeof trainingTime === "number") {
+    const [hour, min] = TimeNumber.deconstruct(trainingTime);
+    timeInput = (
+      <label>
+        <Space />
+        <input
+          type="time"
+          value={`${hour.toString().padStart(2, "0")}:${min
+            .toString()
+            .padStart(2, "0")}`}
+          onChange={handleChangeTimeValue}
+        />
+      </label>
+    );
+  }
+
+  return (
+    <div className="flex-left">
+      <select value={label} onChange={handleChangeTimeType}>
+        {options.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+      {label === "around specific time" && timeInput}
+    </div>
+  );
+
+  function handleChangeTimeType(e: ChangeEvent<HTMLSelectElement>) {
+    const value = e.target.value as Label;
+    if (value === "around specific time") {
+      produceChange((draft) => {
+        draft.trainingTime = 600 as TimeNumber;
+      });
+    } else {
+      produceChange((draft) => {
+        draft.trainingTime = value;
+      });
+    }
+  }
+  function handleChangeTimeValue(e: ChangeEvent<HTMLInputElement>) {
+    const [hour = 0, min = 0] =
+      e.target.value.split(":").map((f) => parseInt(f, 10)) ?? [];
+    console.log({ hour, min });
+
+    produceChange((draft) => {
+      draft.trainingTime = TimeNumber.construct(hour, min);
+    });
+  }
+}
+
+function TimeDurationEditor({ goal, onChange }: SubProps) {
+  const produceChange = (fn: Producer<Goal>) =>
+    onChange(
+      produce(goal, (draft) => {
+        fn(draft);
+      })
+    );
+
+  const { durationOptions } = goal;
+
+  return (
+    <div>
+      <input
+        type="number"
+        defaultValue={15}
+        min={5}
+        max={60 * 8}
+        onChange={handleDurationChange}
+      />{" "}
+      minutes
+      <br />
+      <label>
+        <input
+          type="checkbox"
+          checked={durationOptions.autoAdjust}
+          onChange={handleChangeAutoAdjust}
+        />
+        auto adjust interval
+      </label>
+      {durationOptions.autoAdjust && (
+        <div>
+          interval range: from
+          <input
+            type="number"
+            value={durationOptions.durationRange.min}
+            onChange={handleChangeMinInterval}
+          />{" "}
+          to
+          <input
+            type="number"
+            value={durationOptions.durationRange.max}
+            onChange={handleChangeMaxInterval}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  function handleChangeAutoAdjust(e: ChangeEvent<HTMLInputElement>) {
+    produceChange(
+      (draft) => (draft.durationOptions.autoAdjust = e.target.checked)
+    );
+  }
+
+  function handleDurationChange(e: ChangeEvent<HTMLInputElement>) {
+    produceChange((draft) => (draft.trainingDuration = e.target.valueAsNumber));
+  }
+
+  function handleChangeMinInterval(e: ChangeEvent<HTMLInputElement>): void {
+    produceChange(
+      (draft) =>
+        (draft.durationOptions.durationRange.min = e.target.valueAsNumber)
+    );
+  }
+
+  function handleChangeMaxInterval(e: ChangeEvent<HTMLInputElement>): void {
+    produceChange(
+      (draft) =>
+        (draft.durationOptions.durationRange.max = e.target.valueAsNumber)
+    );
+  }
 }

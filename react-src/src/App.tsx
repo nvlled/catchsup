@@ -7,41 +7,18 @@ import GoalList from "./GoalList";
 import { Actions, useAppStore } from "./lib/state";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
+import { GoalTraining } from "./GoalTraining";
 
 let initialized = false;
 
 function App() {
-  /*
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const handlePlay = () => {
-    audioRef?.current?.play();
-  };
-
-  useEffect(() => {
-    // example code: play audio from any filename
-    (async () => {
-      try {
-        const data = await filesystem.readBinaryFile(
-          "./react-src/public/sample.mp3"
-        );
-        const blob = new Blob([data]);
-        if (audioRef?.current) {
-          audioRef.current.src = window.URL.createObjectURL(blob);
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    })();
-  }, []);
-  */
-
   useOnMount(() => {
     if (initialized) return;
-    console.log("app mount");
+    console.log("mounted");
+    initialized = true;
 
     (async () => {
       await Actions.init();
-      initialized = true;
     })();
   });
 
@@ -77,6 +54,8 @@ function App() {
         </>
       ) : page === "view-goal" ? (
         <GoalView goal={viewGoal} />
+      ) : page === "training" ? (
+        <GoalTraining goal={viewGoal} />
       ) : (
         <div>invalid appstate {page}</div>
       )}

@@ -1,4 +1,15 @@
 
+
+Goal title here
+
+
+   (spinner)
+
+
+   [cancel] 
+
+----------------------------
+
 Goal schedule form
 
 What do you want to do?

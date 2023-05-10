@@ -11,7 +11,7 @@ import { Motivator } from "./motivator";
 
 export interface TrainingLog {
   goalID: number;
-  startTime: number;
+  startTime: UnixTimestamp;
   elapsed: number;
   notes?: string;
 }
@@ -285,6 +285,12 @@ export const Goal = {
       default:
         assertUnreachable(goal.schedulingType);
     }
+  },
+
+  isTrainingDone(goal: Goal, startTime: UnixTimestamp, now?: UnixTimestamp) {
+    now ??= UnixTimestamp.current();
+    const elapsedMin = (now - startTime) / 60;
+    return elapsedMin >= goal.trainingDuration;
   },
 
   isDueOnDay(goal: Goal, time: UnixTimestamp) {

@@ -1,11 +1,9 @@
 
-- goal schedule form
-- GoalView
-- GoalEdit
 
 - add "skip for today" button for due goals
   basically just stops notification
 
-- motivators
+ - build and add to autostart 
 
-  
+- motivators
+ - sounds

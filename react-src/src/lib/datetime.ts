@@ -126,6 +126,9 @@ export const Week = {
 export type TimeNumber = number & { __brand: "time number" };
 
 export const TimeNumber = {
+  construct(hours: number, minutes: number): TimeNumber {
+    return (hours * 100 + minutes) as TimeNumber;
+  },
   deconstruct(t: TimeNumber): [hours: number, minutes: number] {
     return [Math.floor(t / 100), t % 100];
   },

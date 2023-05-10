@@ -1,0 +1,23 @@
+.goal-view-header h1 {
+  display: inline-block;
+  line-height: 1;
+}
+.goal-view-start {
+  padding: 10px 30px;
+}
+
+.goal-view-note-entry {
+  display: flex;
+}
+
+.goal-view-note-entry {
+}
+
+.goal-view-note-entry p {
+  margin-top: 0;
+}
+.goal-view-note-entry-date {
+  margin-top: 2px;
+  margin-right: 5px;
+  font-weight: bold;
+}

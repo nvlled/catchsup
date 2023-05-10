@@ -26,6 +26,10 @@ body {
   margin: 0 auto;
 }
 
+input[type="checkbox"] {
+  margin-right: 3px;
+}
+
 /*
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
