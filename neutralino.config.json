@@ -22,7 +22,7 @@
       "height": 600,
       "minWidth": 400,
       "minHeight": 400,
-      "icon": "/react-src/public/logo192.png"
+      "icon": "/react-src/dist/vite.svg"
     }
   },
   "cli": {

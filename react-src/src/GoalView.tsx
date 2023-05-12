@@ -17,7 +17,7 @@ export default function GoalView({ goal }: Props) {
   const [showMore, setShowMore] = useState(new Set<number>());
 
   const logs = useAppStore((state) =>
-    state.trainingLogs.filter((g) => g.goalID === goal?.id && g.notes)
+    state.trainingLogs.filter((g) => g.goalID === goal?.id)
   );
 
   if (!goal) {
@@ -70,31 +70,42 @@ export default function GoalView({ goal }: Props) {
       {logs.length > 0 ? (
         <>
           <hr />
-          <h3>Notes</h3>
+          <h3>Logs</h3>
         </>
       ) : null}
       <br />
       {logs.map((e) => {
-        if (!e.notes) return null;
         const shown = showMore.has(e.startTime);
-        let html = marked.parse(e.notes);
-        if (!shown) {
-          html = html.slice(0, 250) + "...";
+        let html = marked.parse(e.notes ?? "");
+        const maxlen = 250;
+        const tooLong = html.length > maxlen;
+        if (!shown && tooLong) {
+          html = html.slice(0, maxlen) + "...";
         }
         return (
           <div className="goal-view-note-entry">
             <span className="goal-view-note-entry-date">
               <Space />[{UnixTimestamp.toDateNumber(e.startTime)}]
-              <button onClick={() => handleShowMore(e.startTime)}>
-                {shown ? "less" : "more"}
-              </button>
+              {tooLong && (
+                <button onClick={() => handleShowMore(e.startTime)}>
+                  {shown ? "less" : "more"}
+                </button>
+              )}
             </span>
 
-            <span
-              dangerouslySetInnerHTML={{
-                __html: html,
-              }}
-            />
+            {e.notes ? (
+              <div>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: html,
+                  }}
+                />
+              </div>
+            ) : (
+              <p>
+                <Space />
+              </p>
+            )}
           </div>
         );
       })}

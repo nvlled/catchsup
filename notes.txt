@@ -1,4 +1,30 @@
 
+after start button has been pressed
+play prompt sound, then slowly fade out
+
+then after done button is pressed, play reward sound
+that fades out.
+
+
+
+------------------------------------
+
+[notifications: on]
+
+You've done well, good job.
+You can put some notes here if any.
+|                              |
+|                              |
+|                              |
+|                              |
+
+[Okay, done] 
+
+(?) You can keep on going if you want,
+but note you may want to initially pace yourself
+when building a new habit.
+
+----------------------------
 
 Goal title here
 

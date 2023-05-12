@@ -20,6 +20,11 @@ function App() {
     (async () => {
       await Actions.init();
     })();
+
+    return () => {
+      Actions.deinit();
+      console.log("app unmount");
+    };
   });
 
   const [page, goals, viewGoal] = useAppStore((state) => [

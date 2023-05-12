@@ -413,7 +413,7 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
     <div>
       <input
         type="number"
-        defaultValue={15}
+        value={goal.trainingDuration}
         min={5}
         max={60 * 8}
         onChange={handleDurationChange}

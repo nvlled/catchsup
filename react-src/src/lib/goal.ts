@@ -16,6 +16,12 @@ export interface TrainingLog {
   notes?: string;
 }
 
+export type ActiveTraining = {
+  goalID: GoalID;
+  startTime?: UnixTimestamp;
+  silenceNotification?: boolean;
+} | null;
+
 export type GoalID = number;
 
 export type GoalDueState = "due-now" | "due-today" | "done" | "free";
@@ -287,7 +293,10 @@ export const Goal = {
     }
   },
 
-  isTrainingDone(goal: Goal, startTime: UnixTimestamp, now?: UnixTimestamp) {
+  isTrainingDone(goal: Goal, training: ActiveTraining, now?: UnixTimestamp) {
+    if (!training || !training.startTime) return false;
+
+    const { startTime } = training;
     now ??= UnixTimestamp.current();
     const elapsedMin = (now - startTime) / 60;
     return elapsedMin >= goal.trainingDuration;

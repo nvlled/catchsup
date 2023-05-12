@@ -1,12 +1,19 @@
 import { create } from "zustand";
 import { debug, events, os, storage } from "@neutralinojs/lib";
-import { Goal, GoalID, GoalDueState, TrainingLog } from "./goal";
+import {
+  Goal,
+  GoalID,
+  GoalDueState,
+  TrainingLog,
+  ActiveTraining,
+} from "./goal";
 import { isNeuError } from "./neutralinoext";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { NeuStorage } from "./storage";
 import { produce } from "immer";
 import { UnixTimestamp } from "./datetime";
-import { isInitialized, setInitialized } from "../common";
+import { Howl } from "howler";
+import { sleep } from "../common";
 
 const storageName = "catchsup-data";
 
@@ -35,48 +42,104 @@ export const useAppStore = create<State>()(
   )
 );
 
+const AudioPlayer = {
+  testAudio: null as HTMLAudioElement | null,
+  load() {
+    //const audio = document.createElement("audio");
+    //audio.controls = true;
+    //audio.src = "happy.mp3";
+    //document.appendChild(audio);
+  },
+  play() {
+    AudioPlayer.testAudio?.play();
+  },
+};
+
 const GoalChecker = {
   secondsFreq: 10,
   intervalID: undefined as NodeJS.Timer | undefined,
   start() {
     clearInterval(GoalChecker.intervalID);
     GoalChecker.intervalID = setInterval(
-      updateDueGoals,
+      GoalChecker.updateDueGoals,
       GoalChecker.secondsFreq * 1000
     );
+  },
+
+  updateDueGoals() {
+    const dueStates: Record<GoalID, GoalDueState> = {};
+    let hasDueNow = false;
+
+    const state = useAppStore.getState();
+    for (const goal of state.goals) {
+      dueStates[goal.id] = Goal.checkDue(goal);
+      if (dueStates[goal.id] === "due-now") {
+        hasDueNow = true;
+      }
+    }
+
+    useAppStore.setState({
+      dueStates,
+    });
+
+    if (hasDueNow && !state.activeTraining) {
+      debug.log("has due now");
+      const focused = useAppStore.getState().window.focused;
+      console.log({ focused });
+      if (!focused) {
+        os.showNotification("oi", "you got stuffs to do", os.Icon.QUESTION);
+      }
+    }
+  },
+
+  stop() {
+    clearInterval(GoalChecker.intervalID);
   },
 };
 const WindowStateChecker = {
   start() {
-    events.on("windowFocus", () => {
-      Actions.produceNextState((draft) => {
-        draft.window.focused = true;
-      });
+    events.on("windowFocus", WindowStateChecker.onfocus);
+    events.on("windowBlur", WindowStateChecker.onBlur);
+  },
+  stop() {
+    events.off("windowFocus", WindowStateChecker.onfocus);
+    events.off("windowBlur", WindowStateChecker.onBlur);
+  },
+  onBlur() {
+    Actions.produceNextState((draft) => {
+      draft.window.focused = false;
     });
-
-    events.on("windowBlur", () => {
-      Actions.produceNextState((draft) => {
-        draft.window.focused = false;
-      });
+    console.log("blur");
+  },
+  onfocus() {
+    Actions.produceNextState((draft) => {
+      draft.window.focused = true;
     });
   },
 };
+
 const ActiveTrainingChecker = {
+  intervalID: undefined as NodeJS.Timer | undefined,
   start() {
-    setInterval(() => {
+    clearInterval(ActiveTrainingChecker.intervalID);
+    ActiveTrainingChecker.intervalID = setInterval(() => {
       const { activeTraining, goals, window } = useAppStore.getState();
       if (window.focused) return;
       if (!activeTraining?.startTime) return;
+      if (activeTraining?.silenceNotification) return;
 
       const goal = goals.find((g) => g.id === activeTraining.goalID);
       if (!goal) return;
 
-      if (!Goal.isTrainingDone(goal, activeTraining.startTime)) {
+      if (!Goal.isTrainingDone(goal, activeTraining)) {
         return;
       }
 
       os.showNotification("done", goal.title, os.Icon.QUESTION);
     }, 5000);
+  },
+  stop() {
+    clearInterval(ActiveTrainingChecker.intervalID);
   },
 };
 
@@ -90,11 +153,6 @@ interface TransientState {
     focused: boolean;
   };
 }
-
-type ActiveTraining = {
-  goalID: GoalID;
-  startTime?: UnixTimestamp;
-} | null;
 
 export type State = TransientState & {
   activeTraining: ActiveTraining;
@@ -118,12 +176,11 @@ export const Actions = {
       });
     }
 
-    if (!isInitialized()) {
-      setInitialized();
-      GoalChecker.start();
-      WindowStateChecker.start();
-      ActiveTrainingChecker.start();
-    }
+    GoalChecker.start();
+    WindowStateChecker.start();
+    ActiveTrainingChecker.start();
+
+    GoalChecker.updateDueGoals();
 
     const { activeTraining } = useAppStore.getState();
     if (activeTraining?.startTime) {
@@ -131,6 +188,12 @@ export const Actions = {
     }
 
     console.log("initialized");
+  },
+
+  async deinit() {
+    GoalChecker.stop();
+    WindowStateChecker.stop();
+    ActiveTrainingChecker.stop();
   },
 
   async load(): Promise<State | null> {
@@ -194,14 +257,32 @@ export const Actions = {
       draft.activeTraining = {
         goalID: goal.id,
         startTime: UnixTimestamp.current(),
+        silenceNotification: false,
       };
     });
   },
 
+  toggleActiveTrainingNotifications() {
+    Actions.produceNextState((draft) => {
+      const { activeTraining: training } = draft;
+      if (training) {
+        training.silenceNotification = !training.silenceNotification;
+      }
+    });
+  },
+
   finishGoalTraining(goal: Goal, elapsed: number, notes?: string) {
+    GoalChecker.updateDueGoals();
     Actions.produceNextState((draft) => {
       const { activeTraining } = draft;
       if (!activeTraining?.startTime) return;
+
+      const i = draft.goals.findIndex((g) => g.id === goal.id);
+      if (i >= 0) {
+        draft.goals[i] = produce(goal, (draft) => {
+          Goal.recordTraining(draft);
+        });
+      }
 
       draft.page = "home";
       draft.activeTraining = null;
@@ -238,19 +319,39 @@ export const Actions = {
         draft.push(newGoal);
       }),
     }));
+  },
 
-    //useAppStore.setState((state) => ({
-    //  nextGoalID: state.nextGoalID + 1,
-    //  goals: [
-    //    ...state.goals,
-    //    {
-    //      ...Goal.createEmpty(),
-    //      id: state.nextGoalID,
-    //      title,
-    //      desc,
-    //    },
-    //  ],
-    //}));
+  playPromptSound() {
+    const sound = new Howl({
+      src: ["happy.mp3"],
+    });
+
+    (async function () {
+      const duration = 10 * 1000;
+      sound.play();
+      sound.fade(1, 0, duration);
+      await sleep(duration);
+      sound.stop();
+    })();
+
+    return sound;
+  },
+
+  playRewardSound() {
+    const sound = new Howl({
+      src: ["reward.mp3"],
+    });
+
+    (async function () {
+      const duration = 15 * 1000;
+      sound.seek(3);
+      sound.play();
+      sound.fade(1, 0, duration);
+      await sleep(duration);
+      sound.stop();
+    })();
+
+    return sound;
   },
 };
 
@@ -264,30 +365,4 @@ function parseState(obj: unknown): obj is State {
   if (!Array.isArray(obj.trainingLogs)) return false;
 
   return true;
-}
-
-function updateDueGoals() {
-  const dueStates: Record<GoalID, GoalDueState> = {};
-  let hasDueNow = false;
-
-  const state = useAppStore.getState();
-  for (const goal of state.goals) {
-    dueStates[goal.id] = Goal.checkDue(goal);
-    if (dueStates[goal.id] === "due-now") {
-      hasDueNow = true;
-    }
-  }
-
-  useAppStore.setState({
-    dueStates,
-  });
-
-  if (hasDueNow && !state.activeTraining) {
-    debug.log("has due now");
-    const focused = useAppStore.getState().window.focused;
-    console.log({ focused });
-    if (!focused) {
-      os.showNotification("oi", "you got stuffs to do", os.Icon.QUESTION);
-    }
-  }
 }

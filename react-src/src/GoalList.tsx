@@ -56,6 +56,7 @@ export default function GoalList({ goals }: Props) {
       page: "view-goal",
       activeTraining: {
         goalID: goal.id,
+        silenceNotification: false,
       },
     });
   }

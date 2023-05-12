@@ -2,8 +2,10 @@ import "./styles/GoalTraining.css";
 import { Goal } from "./lib/goal";
 import { Actions, useAppStore } from "./lib/state";
 import { Space } from "./components";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { UnixTimestamp } from "./lib/datetime";
+import { useOnMount } from "./lib/reactext";
+import { Howl } from "howler";
 
 export interface Props {
   goal: Goal | null | undefined;
@@ -13,25 +15,36 @@ type ConfirmState = "accept" | "reject" | "prompt";
 
 export function GoalTraining({ goal }: Props) {
   const activeTraining = useAppStore((state) => state.activeTraining);
-  const [elapsedMin, setElapsedMin] = useState(0);
+  //const [elapsedMin, setElapsedMin] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>("prompt");
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
   const startTime = activeTraining?.startTime ?? UnixTimestamp.current();
-  const isDone = goal && Goal.isTrainingDone(goal, startTime);
+  const isDone = goal && Goal.isTrainingDone(goal, activeTraining);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const now = UnixTimestamp.current();
-      setElapsedMin((now - startTime) / 60);
-    }, 1000);
+  useOnMount(() => {
+    let sound: Howl | undefined;
+    if (!isDone) {
+      sound = Actions.playPromptSound();
+    }
 
-    return () => clearInterval(id);
-  }, [startTime]);
+    return () => {
+      sound?.stop();
+    };
+  });
+
+  //useEffect(() => {
+  //  const id = setInterval(() => {
+  //    const now = UnixTimestamp.current();
+  //    setElapsedMin((now - startTime) / 60);
+  //  }, 1000);
+
+  //  return () => clearInterval(id);
+  //}, [startTime]);
 
   return (
     <div className="goal-training">
-      elapsed={elapsedMin.toFixed(2)} minutes
+      {/*elapsed={elapsedMin.toFixed(2)} minutes*/}
       {!goal ? (
         <>
           goal not found
@@ -50,6 +63,11 @@ export function GoalTraining({ goal }: Props) {
                     cancel
                   </button>
                 )}
+                <Space />
+                <button onClick={handleToggleNotifications}>
+                  notifications:{" "}
+                  {activeTraining?.silenceNotification ? "off" : "on"}
+                </button>
               </small>
             </div>
           </div>
@@ -58,45 +76,69 @@ export function GoalTraining({ goal }: Props) {
 
           {isDone ? (
             <div>
-              Okay, that's it for now. Do you anything in mind?
-              <br />
-              <textarea ref={notesRef} placeholder="(optional" />
               <br />
               <br />
-              <div className="">
-                Just to be sure, you did the thing right? And not get
-                distracted?
-              </div>
-              <div className="goal-training-confirm">
-                <button onClick={handleAccept}>Yeah, I did it</button>
-                <Space count={10} />
-                <button onClick={handleReject}>
-                  Nope, got distracted by other things
-                </button>
-              </div>
+              You've done well. You can put some notes here if any.
               <br />
-              {confirmState === "accept" ? (
-                <div>Good job!</div>
-              ) : confirmState === "reject" ? (
-                <div>
-                  Aw fiddlesticks, do you want to try again?
+              <textarea
+                ref={notesRef}
+                placeholder="(optional"
+                disabled={confirmState === "accept"}
+              />
+              <br />
+              <button
+                onClick={handleAccept}
+                disabled={confirmState === "accept"}
+              >
+                I'm done
+              </button>
+              <br />
+              {confirmState === "accept" && (
+                <div className="goal-training-reward-text">
                   <br />
-                  <button onClick={handleReset}>Ye, start over</button>
-                  <Space count={10} />
-                  <button onClick={handleGoBack}>
-                    No, maybe some other time{" "}
-                  </button>
+                  Good job!
+                  <br />
                 </div>
-              ) : null}
+              )}
+              <br />
+              <i>
+                Note: you can keep on going if you want, but you may want to
+                initially pace yourself when building a new habit.
+              </i>
               <br />
             </div>
           ) : (
-            <div className="goal-training-spinner-container">
+            <div>
               <br />
-              <div className="goal-training-spinner" style={{ color: "gold" }}>
-                ✯
+              <br />
+              <h2 className="flex-center" style={{ zIndex: "20" }}>
+                now ongoing...
+              </h2>
+              <br />
+              <div className="goal-training-spinner-container">
+                <div
+                  className="goal-training-spinner"
+                  style={{
+                    color: "gold",
+                    position: "absolute",
+                    fontSize: "900%",
+                    bottom: "-10px",
+                    //left: "0",
+                  }}
+                >
+                  ✯
+                </div>
+                <div
+                  className=""
+                  style={{
+                    fontSize: "500%",
+                    zIndex: "10",
+                    position: "relative",
+                  }}
+                >
+                  🦍
+                </div>
               </div>
-              <div className="goal-training-spinner">🦍</div>
             </div>
           )}
         </>
@@ -106,24 +148,17 @@ export function GoalTraining({ goal }: Props) {
 
   function handleAccept() {
     setConfirmState("accept");
+    Actions.playRewardSound();
     if (goal) {
       setTimeout(() => {
         const now = UnixTimestamp.current();
         const elapsedMin = (now - startTime) / 60;
         Actions.finishGoalTraining(goal, elapsedMin, notesRef.current?.value);
-      }, 1000);
+      }, 3000);
     }
   }
-  function handleReject() {
-    setConfirmState("reject");
-  }
-  function handleReset() {
-    setConfirmState("prompt");
-    if (goal) {
-      Actions.startGoalTraining(goal);
-    }
-  }
-  function handleGoBack() {
-    Actions.changePage("home");
+
+  function handleToggleNotifications() {
+    Actions.toggleActiveTrainingNotifications();
   }
 }

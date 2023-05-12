@@ -1,3 +1,9 @@
+.goal-training textarea {
+  width: 100%;
+  display: block;
+  height: 150px;
+}
+
 .goal-training-header {
 }
 .goal-training-header h1 {
@@ -13,24 +19,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .goal-training-spinner {
   animation: rotate 10s cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
   display: inline-block;
+  font-size: 400%;
+}
+
+.goal-training-reward-text {
+  font-size: 150%;
+  color: #0d0;
 }
 
 @keyframes rotate {
   0% {
     transform: rotate(0deg);
-    font-size: 100%;
   }
   50% {
-    font-size: 450%;
   }
 
   100% {
     transform: rotate(360deg);
-    font-size: 100%;
   }
 }

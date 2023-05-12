@@ -1,9 +1,15 @@
 
+- build and add to autostart 
+
+
+
+
 
 - add "skip for today" button for due goals
   basically just stops notification
 
- - build and add to autostart 
 
 - motivators
- - sounds
+
+- delete/edit log
+- fix/improve log list
