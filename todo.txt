@@ -1,13 +1,16 @@
 
-- build and add to autostart 
 
-
-
+- hover helper text on @ ! 
+- show sched like "monday morning" on GoalView
+- notify in bursts
+  5 consequentially, then wait a minute or two then repeat
 
 
 - add "skip for today" button for due goals
   basically just stops notification
 
+- presets, or default goals
+  will serve as an example on how to use
 
 - motivators
 
