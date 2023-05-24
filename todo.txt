@@ -1,16 +1,10 @@
 
 - backup .storage
 
-- cleanup and commit
-
 - temporary change schedule or defer only for today
   x add "skip for today" button for due goals
     basically just stops notification
 
-- still show description below gorilla even after training
-  has started. Add button to toggle notes
-
-- reverse notes sort order
 
 - make notifications more disruptive
   play louder sounds
@@ -21,11 +15,7 @@
 - allow minutes in invervals
   try to use it as space repetition
 
-
 - presets, or default goals
   will serve as an example on how to use
 
 - motivators
-
-- delete/edit log
-- fix/improve log list

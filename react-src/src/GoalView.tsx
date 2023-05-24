@@ -7,17 +7,16 @@ import { GoalEditor } from "./GoalEditor";
 import { marked } from "marked";
 import { Space } from "./components";
 import { TrainingTime, UnixTimestamp } from "./lib/datetime";
-import { produce } from "immer";
+import { GoalLogs } from "./GoalLogs";
 
 export interface Props {
   goal?: Goal;
 }
 export default function GoalView({ goal }: Props) {
   const [edit, setEdit] = useState(false);
-  const [showMore, setShowMore] = useState(new Set<number>());
 
   const logs = useAppStore((state) =>
-    state.trainingLogs.filter((g) => g.goalID === goal?.id)
+    state.trainingLogs.filter((g) => g.goalID === goal?.id).reverse()
   );
 
   if (!goal) {
@@ -72,55 +71,11 @@ export default function GoalView({ goal }: Props) {
       <br />
       {logs.length > 0 ? (
         <>
-          <hr />
           <h3>Logs</h3>
+          <hr />
+          <GoalLogs logs={logs} />
         </>
       ) : null}
-      <br />
-      {logs.map((e) => {
-        const shown = showMore.has(e.startTime);
-        let html = marked.parse(e.notes ?? "");
-        const maxlen = 250;
-        const tooLong = html.length > maxlen;
-        if (!shown && tooLong) {
-          html = html.slice(0, maxlen) + "...";
-        }
-        return (
-          <div className="goal-view-note-entry">
-            <span className="goal-view-note-entry-date">
-              <Space />[{UnixTimestamp.toDateNumber(e.startTime)}]
-              {tooLong && (
-                <button onClick={() => handleShowMore(e.startTime)}>
-                  {shown ? "less" : "more"}
-                </button>
-              )}
-            </span>
-
-            {e.notes ? (
-              <div>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: html,
-                  }}
-                />
-              </div>
-            ) : (
-              <p>
-                <Space />
-              </p>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
-
-  function handleShowMore(t: UnixTimestamp) {
-    setShowMore(
-      produce(showMore, (draft) => {
-        if (draft.has(t)) draft.delete(t);
-        else draft.add(t);
-      })
-    );
-  }
 }

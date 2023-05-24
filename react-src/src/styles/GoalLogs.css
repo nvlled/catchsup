@@ -1,0 +1,18 @@
+.goal-log-note-entry {
+}
+
+.goal-log-note-entry {
+}
+
+.goal-log-note-entry p {
+  margin-top: 0;
+}
+.goal-log-note-entry-date {
+  margin-top: 2px;
+  font-weight: bold;
+}
+.goal-log-contents {
+  border-left: 3px solid gray;
+  padding-left: 10px;
+  margin-bottom: 20px;
+}

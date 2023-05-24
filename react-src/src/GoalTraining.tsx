@@ -6,6 +6,8 @@ import { useRef, useState } from "react";
 import { UnixTimestamp } from "./lib/datetime";
 import { useOnMount } from "./lib/reactext";
 import { Howl } from "howler";
+import { marked } from "marked";
+import { GoalLogs } from "./GoalLogs";
 
 export interface Props {
   goal: Goal | null | undefined;
@@ -20,6 +22,10 @@ export function GoalTraining({ goal }: Props) {
 
   const startTime = activeTraining?.startTime ?? UnixTimestamp.current();
   const isDone = goal && Goal.isTrainingDone(goal, activeTraining);
+
+  const logs = useAppStore((state) =>
+    state.trainingLogs.filter((g) => g.goalID === goal?.id).reverse()
+  );
 
   useOnMount(() => {
     let sound: Howl | undefined;
@@ -130,6 +136,23 @@ export function GoalTraining({ goal }: Props) {
               </div>
             </div>
           )}
+
+          <br />
+          <hr />
+
+          {goal.desc && (
+            <div
+              dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }}
+            />
+          )}
+          {logs.length > 0 ? (
+            <>
+              <details>
+                <summary>Logs</summary>
+                <GoalLogs logs={logs} />
+              </details>
+            </>
+          ) : null}
         </>
       )}
     </div>

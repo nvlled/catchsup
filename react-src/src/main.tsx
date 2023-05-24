@@ -5,8 +5,13 @@ import { init } from "@neutralinojs/lib";
 
 import "./styles/index.css";
 import { enableMapSet } from "immer";
+import { marked } from "marked";
 
 enableMapSet();
+
+marked.use({
+  silent: true,
+});
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
