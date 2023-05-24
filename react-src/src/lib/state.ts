@@ -21,15 +21,16 @@ const storageName = "catchsup-data";
 export const useAppStore = create<State>()(
   persist(
     () =>
-      ({
-        page: "home",
-        activeTraining: null,
-        window: { focused: false },
+    ({
+      page: "home",
+      activeTraining: null,
+      window: { focused: false },
+      dueStates: {},
 
-        goals: [],
-        trainingLogs: [],
-        nextGoalID: 1,
-      } as State),
+      goals: [],
+      trainingLogs: [],
+      nextGoalID: 1,
+    } as State),
     {
       name: storageName,
       storage: createJSONStorage(() => NeuStorage),
@@ -43,19 +44,6 @@ export const useAppStore = create<State>()(
   )
 );
 
-const AudioPlayer = {
-  testAudio: null as HTMLAudioElement | null,
-  load() {
-    //const audio = document.createElement("audio");
-    //audio.controls = true;
-    //audio.src = "happy.mp3";
-    //document.appendChild(audio);
-  },
-  play() {
-    AudioPlayer.testAudio?.play();
-  },
-};
-
 const GoalChecker = {
   secondsFreq: 60,
   intervalID: undefined as NodeJS.Timer | undefined,
@@ -68,20 +56,20 @@ const GoalChecker = {
   },
 
   updateDueGoals() {
-    const dueStates: Record<GoalID, GoalDueState> = {};
     let hasDueNow = false;
 
     const state = useAppStore.getState();
-    // TODO: use produce maybe to avoid trigger useEffect change
-    for (const goal of state.goals) {
-      dueStates[goal.id] = Goal.checkDue(goal);
-      if (dueStates[goal.id] === "due-now") {
-        hasDueNow = true;
+    const updatedDueStates = produce(state.dueStates, draft => {
+      for (const goal of state.goals) {
+        draft[goal.id] = Goal.checkDue(goal);
+        if (draft[goal.id] === "due-now") {
+          hasDueNow = true;
+        }
       }
-    }
+    })
 
     useAppStore.setState({
-      dueStates,
+      dueStates: updatedDueStates,
     });
 
     if (state.activeTraining?.startTime) {
@@ -163,7 +151,7 @@ export type AppPage = "home" | "create-goal" | "view-goal" | "training";
 
 interface TransientState {
   page: AppPage;
-  dueStates?: Record<GoalID, GoalDueState>;
+  dueStates: Record<GoalID, GoalDueState>;
 
   window: {
     focused: boolean;
@@ -297,7 +285,6 @@ export const Actions = {
     });
 
     Systray.setIcon("ongoing");
-
     //AppEvent.dispatch("goal-started");
   },
 

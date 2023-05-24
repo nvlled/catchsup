@@ -15,7 +15,6 @@ type ConfirmState = "accept" | "reject" | "prompt";
 
 export function GoalTraining({ goal }: Props) {
   const activeTraining = useAppStore((state) => state.activeTraining);
-  //const [elapsedMin, setElapsedMin] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>("prompt");
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
@@ -32,15 +31,6 @@ export function GoalTraining({ goal }: Props) {
       sound?.stop();
     };
   });
-
-  //useEffect(() => {
-  //  const id = setInterval(() => {
-  //    const now = UnixTimestamp.current();
-  //    setElapsedMin((now - startTime) / 60);
-  //  }, 1000);
-
-  //  return () => clearInterval(id);
-  //}, [startTime]);
 
   return (
     <div className="goal-training">
@@ -123,7 +113,6 @@ export function GoalTraining({ goal }: Props) {
                     position: "absolute",
                     fontSize: "900%",
                     bottom: "-10px",
-                    //left: "0",
                   }}
                 >
                   ✯
