@@ -31,8 +31,8 @@ describe("Goal", () => {
       schedulingData: { weekly },
     } = goal;
 
-    goal.updatedTime = makeTime(day1, 900);
-    goal.trainingTime = "morning";
+    goal.updatedTime = makeTime(day1, 800);
+    goal.trainingTime = "early morning";
     goal.schedulingType = "weekly";
     weekly.dayOfWeeks = {
       monday: true,
@@ -40,10 +40,10 @@ describe("Goal", () => {
       friday: true,
     } as SetOfWeekDays;
 
-    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 930)));
-    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 910)));
-    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day3, 910)));
-    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day4, 910)));
+    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 830)));
+    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 810)));
+    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day3, 810)));
+    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day4, 810)));
   });
 
   it("schedules by date", () => {
@@ -53,23 +53,23 @@ describe("Goal", () => {
       schedulingData: { monthly },
     } = goal;
 
-    goal.updatedTime = makeTime(day1, 900);
-    goal.trainingTime = "morning";
+    goal.updatedTime = makeTime(day1, 800);
+    goal.trainingTime = "early morning";
     goal.schedulingType = "monthly";
     monthly.dayOfMonths = { 1: true, 2: true, 3: true, 4: true, 10: true };
 
-    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 930)));
-    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 910)));
-    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day3, 910)));
-    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day4, 910)));
+    assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 830)));
+    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 810)));
+    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day3, 810)));
+    assert.isTrue(Goal.isDueOnTime(goal, makeTime(day4, 810)));
     assert.isTrue(
-      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 9), 910))
+      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 9), 810))
     );
     assert.isFalse(
-      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 20), 910))
+      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 20), 810))
     );
     assert.isTrue(
-      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 31), 910))
+      Goal.isDueOnTime(goal, makeTime(DateNumber.addDays(day1, 31), 810))
     );
   });
 
@@ -104,7 +104,7 @@ describe("Goal", () => {
     assert.isTrue(Goal.isDueOnTime(goal, makeTime(day3, 930)));
     assert.isTrue(Goal.isDueOnTime(goal, makeTime(day4, 930)));
 
-    goal.trainingTime = "morning";
+    goal.trainingTime = "late morning";
 
     daily.interval = 1;
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day1, 930)));
@@ -115,7 +115,7 @@ describe("Goal", () => {
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day2, 1230)));
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day2, 1300)));
 
-    goal.trainingTime = "afternoon";
+    goal.trainingTime = "early afternoon";
     assert.isTrue(Goal.isDueOnTime(goal, makeTime(day2, 1200)));
     assert.isFalse(Goal.isDueOnTime(goal, makeTime(day2, 930)));
   });

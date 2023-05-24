@@ -8,6 +8,7 @@ import { Actions, useAppStore } from "./lib/state";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
 import { GoalTraining } from "./GoalTraining";
+import { useEffect } from "react";
 
 let initialized = false;
 
@@ -17,9 +18,7 @@ function App() {
     console.log("mounted");
     initialized = true;
 
-    (async () => {
-      await Actions.init();
-    })();
+    Actions.init();
 
     return () => {
       Actions.deinit();
@@ -27,11 +26,16 @@ function App() {
     };
   });
 
-  const [page, goals, viewGoal] = useAppStore((state) => [
+  const [dueStates, page, goals, viewGoal] = useAppStore((state) => [
+    state.dueStates,
     state.page,
     state.goals,
     state.goals.find((e) => e.id === state.activeTraining?.goalID),
   ]);
+
+  useEffect(() => {
+    console.log("due states changed");
+  }, [dueStates]);
 
   return (
     <>

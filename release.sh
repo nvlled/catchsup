@@ -2,7 +2,7 @@
 cd react-src
 npm run build
 cd ..
-neu build -r --copy-storage
+neu build -r
 cat <<EOF > ./dist/catchsup/catchsup.sh
 #!/bin/bash
 cd "\$(dirname "\$0")"

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { debug, events, os, storage } from "@neutralinojs/lib";
+import { events, os, storage } from "@neutralinojs/lib";
 import {
   Goal,
   GoalID,
@@ -14,6 +14,7 @@ import { produce } from "immer";
 import { UnixTimestamp } from "./datetime";
 import { Howl } from "howler";
 import { sleep } from "../common";
+import { Systray, tray } from "./systray";
 
 const storageName = "catchsup-data";
 
@@ -56,7 +57,7 @@ const AudioPlayer = {
 };
 
 const GoalChecker = {
-  secondsFreq: 10,
+  secondsFreq: 60,
   intervalID: undefined as NodeJS.Timer | undefined,
   start() {
     clearInterval(GoalChecker.intervalID);
@@ -71,6 +72,7 @@ const GoalChecker = {
     let hasDueNow = false;
 
     const state = useAppStore.getState();
+    // TODO: use produce maybe to avoid trigger useEffect change
     for (const goal of state.goals) {
       dueStates[goal.id] = Goal.checkDue(goal);
       if (dueStates[goal.id] === "due-now") {
@@ -82,8 +84,22 @@ const GoalChecker = {
       dueStates,
     });
 
-    if (hasDueNow && !state.activeTraining) {
-      debug.log("has due now");
+    if (state.activeTraining?.startTime) {
+      const { activeTraining } = state;
+      const goal = state.goals.find(
+        (goal) => goal.id === activeTraining.goalID
+      );
+      if (goal && Goal.isTrainingDone(goal, state.activeTraining)) {
+        Systray.setIcon("time-up");
+      } else {
+        Systray.setIcon("ongoing");
+      }
+    } else {
+      Systray.setIconByDueState(Goal.checkAllDue(state.goals));
+    }
+
+    if (hasDueNow && !state.activeTraining?.startTime) {
+      console.log("has due now");
       const focused = useAppStore.getState().window.focused;
       console.log({ focused });
       if (!focused) {
@@ -122,7 +138,7 @@ const ActiveTrainingChecker = {
   intervalID: undefined as NodeJS.Timer | undefined,
   start() {
     clearInterval(ActiveTrainingChecker.intervalID);
-    ActiveTrainingChecker.intervalID = setInterval(() => {
+    ActiveTrainingChecker.intervalID = setInterval(async () => {
       const { activeTraining, goals, window } = useAppStore.getState();
       if (window.focused) return;
       if (!activeTraining?.startTime) return;
@@ -134,9 +150,9 @@ const ActiveTrainingChecker = {
       if (!Goal.isTrainingDone(goal, activeTraining)) {
         return;
       }
-
+      Systray.setIcon("time-up");
       os.showNotification("done", goal.title, os.Icon.QUESTION);
-    }, 5000);
+    }, 60 * 1000);
   },
   stop() {
     clearInterval(ActiveTrainingChecker.intervalID);
@@ -179,13 +195,24 @@ export const Actions = {
     GoalChecker.start();
     WindowStateChecker.start();
     ActiveTrainingChecker.start();
-
     GoalChecker.updateDueGoals();
 
     const { activeTraining } = useAppStore.getState();
     if (activeTraining?.startTime) {
       Actions.changePage("training");
     }
+
+    //let tray = {
+    //  icon: "/react-src/public/icons/due-now.png",
+    //  menuItems: [
+    //    { id: "about", text: "About" },
+    //    { text: "-" },
+    //    { id: "quit", text: "Quit" },
+    //  ],
+    //};
+
+    //os.setTray(tray);
+    //await os.setTray(tray);
 
     console.log("initialized");
   },
@@ -234,14 +261,19 @@ export const Actions = {
   },
 
   modifyGoal(goal: Goal) {
-    useAppStore.setState((state) => ({
-      goals: produce(state.goals, (draft) => {
-        const index = draft.findIndex((e) => e.id === goal.id);
-        if (index >= 0) {
-          draft[index] = goal;
-        }
-      }),
-    }));
+    Actions.produceNextState((draft) => {
+      const index = draft.goals.findIndex((e) => e.id === goal.id);
+      if (index >= 0) {
+        draft.goals[index] = goal;
+      }
+      if (!draft.dueStates) {
+        draft.dueStates = {};
+      }
+      draft.dueStates[goal.id] = Goal.checkDue(goal);
+    });
+
+    const { goals } = useAppStore.getState();
+    Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   cancelGoalTraining() {
@@ -249,6 +281,9 @@ export const Actions = {
       draft.page = "home";
       draft.activeTraining = null;
     });
+
+    const { goals } = useAppStore.getState();
+    Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   startGoalTraining(goal: Goal) {
@@ -260,6 +295,10 @@ export const Actions = {
         silenceNotification: false,
       };
     });
+
+    Systray.setIcon("ongoing");
+
+    //AppEvent.dispatch("goal-started");
   },
 
   toggleActiveTrainingNotifications() {
@@ -272,7 +311,6 @@ export const Actions = {
   },
 
   finishGoalTraining(goal: Goal, elapsed: number, notes?: string) {
-    GoalChecker.updateDueGoals();
     Actions.produceNextState((draft) => {
       const { activeTraining } = draft;
       if (!activeTraining?.startTime) return;
@@ -284,8 +322,14 @@ export const Actions = {
         });
       }
 
+      const dueStates: Record<GoalID, GoalDueState> = {};
+      for (const goal of draft.goals) {
+        dueStates[goal.id] = Goal.checkDue(goal);
+      }
+
       draft.page = "home";
       draft.activeTraining = null;
+      draft.dueStates = dueStates;
       draft.trainingLogs.push({
         goalID: goal.id,
         elapsed,
@@ -293,6 +337,9 @@ export const Actions = {
         notes,
       });
     });
+
+    const { goals } = useAppStore.getState();
+    Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   createGoal(goal: Goal) {
@@ -366,3 +413,25 @@ function parseState(obj: unknown): obj is State {
 
   return true;
 }
+
+export type AppEvent = "goal-started" | "goal-finished" | "goal-cancelled";
+
+export const AppEvent = {
+  dispatch(name: AppEvent, data?: unknown) {
+    events.dispatch(name, data);
+  },
+
+  on(
+    event: AppEvent,
+    handler: (ev: CustomEvent) => void
+  ): Promise<events.Response> {
+    return events.on(event, handler);
+  },
+
+  off(
+    event: AppEvent,
+    handler: (ev: CustomEvent) => void
+  ): Promise<events.Response> {
+    return events.off(event, handler);
+  },
+};

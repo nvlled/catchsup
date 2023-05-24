@@ -135,6 +135,12 @@ export const TimeNumber = {
   fromDate(d: Date): TimeNumber {
     return (d.getHours() * 100 + d.getMinutes()) as TimeNumber;
   },
+  toString(t: TimeNumber) {
+    const [hour, min] = TimeNumber.deconstruct(t);
+    return `${hour.toString().padStart(2, "0")}:${min
+      .toString()
+      .padStart(2, "0")}`;
+  },
 };
 
 export type TimeRange = [startTime: TimeNumber, endTime: TimeNumber];
@@ -142,7 +148,11 @@ export type TimeRange = [startTime: TimeNumber, endTime: TimeNumber];
 export type TimeRangeLabel =
   | "morning"
   | "afternoon"
-  | "evening"
+  | "early morning"
+  | "late morning"
+  | "early afternoon"
+  | "late afternoon"
+  | "early evening"
   | "late evening"
   | "late at night";
 
@@ -177,6 +187,16 @@ export const TrainingTime = {
     }
   },
 
+  toString(tt: TrainingTime): string {
+    if (typeof tt === "number") {
+      return TimeNumber.toString(tt);
+    } else if (Array.isArray(tt)) {
+      return tt.map(TimeNumber.toString).join("-");
+    } else {
+      return TrainingTime.ranges[tt]?.map(TimeNumber.toString).join("-");
+    }
+  },
+
   fromUnixTimestamp(t: UnixTimestamp) {
     const d = new Date(t * 1000);
     return d.getHours() * 100 + d.getMinutes();
@@ -185,7 +205,11 @@ export const TrainingTime = {
   ranges: {
     morning: [600, 1200],
     afternoon: [1200, 1800],
-    evening: [1800, 2100],
+    "early morning": [600, 900],
+    "late morning": [900, 1200],
+    "early afternoon": [1200, 1500],
+    "late afternoon": [1500, 1800],
+    "early evening": [1800, 2100],
     "late evening": [2100, 0],
     "late at night": [0, 600],
   } as Record<TimeRangeLabel, TimeRange>,

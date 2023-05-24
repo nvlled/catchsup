@@ -6,7 +6,7 @@ import { Actions, useAppStore } from "./lib/state";
 import { GoalEditor } from "./GoalEditor";
 import { marked } from "marked";
 import { Space } from "./components";
-import { UnixTimestamp } from "./lib/datetime";
+import { TrainingTime, UnixTimestamp } from "./lib/datetime";
 import { produce } from "immer";
 
 export interface Props {
@@ -53,6 +53,9 @@ export default function GoalView({ goal }: Props) {
           <button onClick={() => setEdit(true)}>edit</button>
         </small>
       </div>
+      {TrainingTime.toString(goal.trainingTime)}
+      <Space /> | <Space />
+      {Goal.getScheduleSummary(goal)}
       <br />
       {goal.desc && (
         <div dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }} />

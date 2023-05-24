@@ -32,12 +32,17 @@
   font-weight: 900;
   font-size: 130%;
   color: #bbb;
+  margin-right: 10px;
 }
 
 .goal-list-entry-marker.due-now {
   color: #0d0;
 }
 
-.goal-list-entry-marker.due-today {
+.goal-list-entry-marker.due-later {
   color: #00f;
+}
+
+.goal-list-entry-marker.was-due {
+  color: #b0000b;
 }

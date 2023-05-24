@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Space } from "./components";
-import { Goal } from "./lib/goal";
+import { Goal, goalDueStateImages } from "./lib/goal";
 import { useChanged } from "./lib/reactext";
 import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
@@ -36,12 +36,21 @@ export default function GoalList({ goals }: Props) {
             className="goal-list-entry"
             onClick={() => handleOpen(e)}
           >
-            <div className={"goal-list-entry-marker " + dueStates[e.id]}>
-              {dueStates[e.id] === "due-now"
-                ? "!"
-                : dueStates[e.id] === "due-today"
-                ? "@"
-                : "-"}
+            <div
+              className={"goal-list-entry-marker " + dueStates[e.id]}
+              title={
+                dueStates[e.id] === "due-now"
+                  ? "do now!?"
+                  : dueStates[e.id] === "due-later"
+                  ? "do later today"
+                  : dueStates[e.id] === "was-due"
+                  ? "missed, you can still do it"
+                  : "-"
+              }
+            >
+              {goalDueStateImages[dueStates[e.id]] && (
+                <img src={goalDueStateImages[dueStates[e.id]]} />
+              )}
             </div>
             <Space />
             <div>{e.title}</div>

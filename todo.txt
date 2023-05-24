@@ -1,13 +1,26 @@
 
+- backup .storage
 
-- hover helper text on @ ! 
-- show sched like "monday morning" on GoalView
-- notify in bursts
-  5 consequentially, then wait a minute or two then repeat
+- cleanup and commit
+
+- temporary change schedule or defer only for today
+  x add "skip for today" button for due goals
+    basically just stops notification
+
+- still show description below gorilla even after training
+  has started. Add button to toggle notes
+
+- reverse notes sort order
+
+- make notifications more disruptive
+  play louder sounds
+  - this is to make sure time limit is followed
+    since I've doing way past 15 minutes for some goals
 
 
-- add "skip for today" button for due goals
-  basically just stops notification
+- allow minutes in invervals
+  try to use it as space repetition
+
 
 - presets, or default goals
   will serve as an example on how to use

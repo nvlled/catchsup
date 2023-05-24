@@ -1,4 +1,36 @@
 
+# systray icon
+
+## no active goal
+show symbol of nearest due goal
+- orange (due now, ready)
+
+
+## active goal
+show green to indicate it's running
+show red to indicate it's time to stop
+
+SystrayController = {
+  loop() {
+    if (timeUp) {
+
+    }
+  }
+  start() {
+    setInterval(this.loop)
+    onStartGoal(() =>{
+
+    })
+    onUpdateDueState(() => {
+
+    })
+  }
+}
+
+
+
+------------------------------------
+
 after start button has been pressed
 play prompt sound, then slowly fade out
 

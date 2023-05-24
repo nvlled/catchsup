@@ -15,8 +15,11 @@ describe("TrainingTime", () => {
       [1200, 1200]
     );
 
-    assert.deepEqual(TrainingTime.getTimeRange("morning"), [600, 1200]);
-    assert.deepEqual(TrainingTime.getTimeRange("afternoon"), [1200, 1800]);
+    assert.deepEqual(TrainingTime.getTimeRange("early morning"), [600, 900]);
+    assert.deepEqual(
+      TrainingTime.getTimeRange("early afternoon"),
+      [1200, 1500]
+    );
 
     assert.deepEqual(
       TrainingTime.getTimeRange([1100, 1400] as TimeRange),

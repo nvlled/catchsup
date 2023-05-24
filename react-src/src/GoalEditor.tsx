@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useRef, useState } from "react";
-import { WeekDay } from "./lib/datetime";
+import { TrainingTime, WeekDay } from "./lib/datetime";
 import { Goal, GoalID, SchedulingType } from "./lib/goal";
 import { useOnMount } from "./lib/reactext";
 import { Actions } from "./lib/state";
@@ -335,12 +335,14 @@ function TimeSchedEditor({ goal, onChange }: SubProps) {
       ? "around specific time"
       : !Array.isArray(trainingTime)
       ? trainingTime
-      : "morning";
+      : "early morning";
 
   const options: Label[] = [
-    "morning",
-    "afternoon",
-    "evening",
+    "early morning",
+    "late morning",
+    "early afternoon",
+    "late afternoon",
+    "early evening",
     "late evening",
     "late at night",
     "around specific time",
@@ -348,15 +350,12 @@ function TimeSchedEditor({ goal, onChange }: SubProps) {
 
   let timeInput = <div />;
   if (typeof trainingTime === "number") {
-    const [hour, min] = TimeNumber.deconstruct(trainingTime);
     timeInput = (
       <label>
         <Space />
         <input
           type="time"
-          value={`${hour.toString().padStart(2, "0")}:${min
-            .toString()
-            .padStart(2, "0")}`}
+          value={TimeNumber.toString(trainingTime)}
           onChange={handleChangeTimeValue}
         />
       </label>
@@ -368,7 +367,7 @@ function TimeSchedEditor({ goal, onChange }: SubProps) {
       <select value={label} onChange={handleChangeTimeType}>
         {options.map((value) => (
           <option key={value} value={value}>
-            {value}
+            {value} {TrainingTime.toString(value as TrainingTime)}
           </option>
         ))}
       </select>

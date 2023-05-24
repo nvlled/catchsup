@@ -24,7 +24,15 @@ export type ActiveTraining = {
 
 export type GoalID = number;
 
-export type GoalDueState = "due-now" | "due-today" | "done" | "free";
+export const dueStates = ["due-now", "due-later", "was-due", "free"] as const;
+export type GoalDueState = (typeof dueStates)[number];
+
+export const goalDueStateImages: Record<GoalDueState, string> = {
+  "due-now": "/icons/due-now.png",
+  "due-later": "/icons/due-later.png",
+  "was-due": "/icons/was-due.png",
+  free: "",
+};
 
 export type SchedulingType = "daily" | "weekly" | "monthly";
 
@@ -97,7 +105,7 @@ export const Goal = {
       updatedTime: UnixTimestamp.current(),
       lastSkipCheck: DateNumber.current(),
 
-      trainingTime: "morning",
+      trainingTime: "early morning",
 
       trainingDuration: 15,
       durationOptions: {
@@ -365,10 +373,55 @@ export const Goal = {
     }
 
     const trainingTime = goal.trainingTime;
-    if (!TrainingTime.inRange(trainingTime, now)) {
-      return "due-today";
+    if (TrainingTime.inRange(trainingTime, now)) {
+      return "due-now";
+    }
+    const [, endTime] = TrainingTime.getTimeRange(trainingTime);
+    const endTimestamp = UnixTimestamp.from(DateNumber.current(), endTime);
+    if (now < endTimestamp) {
+      return "due-later";
     }
 
-    return "due-now";
+    return "was-due";
+  },
+
+  checkAllDue(goals: Goal[]): GoalDueState {
+    const set = new Set<GoalDueState>();
+    for (const goal of goals) {
+      const state = Goal.checkDue(goal);
+      set.add(state);
+      if (set.size === dueStates.length) {
+        break;
+      }
+    }
+    if (set.has("due-now")) return "due-now";
+    if (set.has("was-due")) return "was-due";
+    if (set.has("due-later")) return "due-later";
+    return "free";
+  },
+
+  getScheduleSummary(goal: Goal) {
+    const data = goal.schedulingData;
+    switch (goal.schedulingType) {
+      case "daily": {
+        return data.daily.interval === 1
+          ? "everyday"
+          : `every ${data.daily.interval} days`;
+      }
+      case "weekly": {
+        const days: string[] = [];
+        for (const [day, ok] of Object.entries(data.weekly.dayOfWeeks)) {
+          if (ok) days.push(day);
+        }
+        return days.join(", ");
+      }
+      case "monthly": {
+        const days: string[] = [];
+        for (const [day, ok] of Object.entries(data.monthly.dayOfMonths)) {
+          if (ok) days.push(day);
+        }
+        return "month dates: [" + days.join("|") + "]";
+      }
+    }
   },
 };
