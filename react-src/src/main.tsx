@@ -7,6 +7,8 @@ import "./styles/index.css";
 import { enableMapSet } from "immer";
 import { marked } from "marked";
 
+Howler.autoSuspend = false;
+
 enableMapSet();
 
 marked.use({

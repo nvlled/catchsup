@@ -2,9 +2,9 @@ import { os } from "@neutralinojs/lib";
 import { GoalDueState } from "./goal";
 
 //let intervalID: NodeJS.Timer | undefined = undefined;
-const baseIconPath = "/react-src/public/icons/";
+const baseIconPath = "/react-src/dist";
 
-export const tray = {
+const tray = {
   icon: "",
   menuItems: [
     { id: "show-window", text: "Show window" },
@@ -13,22 +13,22 @@ export const tray = {
 };
 
 export const iconNames = {
-  "due-now": "/icons/due-now.png",
-  "due-later": "/icons/due-later.png",
-  "was-due": "/icons/was-due.png",
-  "time-up": "/icons/time-tup.png",
-  ongoing: "/icons/ongoing.png",
-  blank: "",
+  "due-now": baseIconPath + "/icons/due-now.png",
+  "due-later": baseIconPath + "/icons/due-later.png",
+  "was-due": baseIconPath + "/logo.png",
+  "time-up": baseIconPath + "/icons/time-up.png",
+  ongoing: baseIconPath + "/icons/ongoing.png",
+  blank: baseIconPath + "/logo.png",
 };
 export type IconName = keyof typeof iconNames;
 
 export const Systray = {
-  //loopInterval: 2000,
-
   async setIcon(name: IconName) {
-    const iconPath = baseIconPath + name + ".png";
-    if (iconPath !== tray.icon) {
+    const iconPath = iconNames[name];
+    if (iconPath && iconPath !== tray.icon) {
       tray.icon = iconPath;
+      //tray.icon = iconNames["blank"]
+      console.log("set systray icon", tray.icon);
       await os.setTray(tray);
     }
   },

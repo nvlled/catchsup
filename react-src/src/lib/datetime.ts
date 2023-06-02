@@ -135,11 +135,30 @@ export const TimeNumber = {
   fromDate(d: Date): TimeNumber {
     return (d.getHours() * 100 + d.getMinutes()) as TimeNumber;
   },
+  current() {
+    const d = new Date();
+    return (d.getHours() * 100 + d.getMinutes()) as TimeNumber;
+  },
+  fromString(s: string) {
+    const [h, m] = s.split(":").map((s) => parseInt(s, 10));
+    return TimeNumber.construct(h, m);
+  },
   toString(t: TimeNumber) {
     const [hour, min] = TimeNumber.deconstruct(t);
     return `${hour.toString().padStart(2, "0")}:${min
       .toString()
       .padStart(2, "0")}`;
+  },
+  addHours(t: TimeNumber, n: number) {
+    t = Math.floor(t) as TimeNumber;
+
+    const [hours, minutes] = TimeNumber.deconstruct(t);
+    const addMin = Math.trunc((n % 1) * 60);
+    const addHours = Math.trunc(n);
+    console.log({ addHours, addMin }, n % 1);
+
+    const d = new Date(0, 0, 0, hours + addHours, minutes + addMin);
+    return TimeNumber.fromDate(d);
   },
 };
 
@@ -159,14 +178,31 @@ export type TimeRangeLabel =
 export type TrainingTime = TimeNumber | TimeRangeLabel | TimeRange;
 
 export const TrainingTime = {
+  getDuration(tt: TrainingTime) {
+    const [from, to] = TrainingTime.getTimeRange(tt);
+    const fromTime = TimeNumber.deconstruct(from);
+    const fromDate = new Date(0, 0, 0, fromTime[0], fromTime[1]);
+
+    const toTime = TimeNumber.deconstruct(to);
+    const toDate = new Date(0, 0, 0, toTime[0], toTime[1]);
+
+    const minutes = (toDate.getTime() - fromDate.getTime()) / 1000 / 60;
+
+    if (from > to) {
+      return 24 * 60 + minutes;
+    }
+    return minutes;
+  },
   inRange(tt: TrainingTime, t: UnixTimestamp) {
     const [start, end] = TrainingTime.getTimeRange(tt);
     let x = TrainingTime.fromUnixTimestamp(t);
 
-    // ignore minutes in ones
-    // example, 12:31 -> 12:30
-    //          12:37 -> 12:30
-    x = Math.floor(x / 10) * 10;
+    if (typeof tt === "number") {
+      // ignore minutes in ones
+      // example, 12:31 -> 12:30
+      //          12:37 -> 12:30
+      x = Math.floor(x / 10) * 10;
+    }
 
     if (end >= start) {
       return x >= start && x <= end;

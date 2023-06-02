@@ -2,18 +2,31 @@ import "./styles/GoalTraining.css";
 import { Goal } from "./lib/goal";
 import { Actions, useAppStore } from "./lib/state";
 import { Space } from "./components";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UnixTimestamp } from "./lib/datetime";
 import { useOnMount } from "./lib/reactext";
-import { Howl } from "howler";
 import { marked } from "marked";
 import { GoalLogs } from "./GoalLogs";
+import { Action } from "./lib/neutralinoext";
 
 export interface Props {
   goal: Goal | null | undefined;
 }
 
 type ConfirmState = "accept" | "reject" | "prompt";
+
+function useTimer(ms: number) {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCounter((counter) => counter + 1);
+    }, ms);
+    return () => clearInterval(id);
+  }, [ms]);
+
+  return counter;
+}
 
 export function GoalTraining({ goal }: Props) {
   const activeTraining = useAppStore((state) => state.activeTraining);
@@ -28,19 +41,20 @@ export function GoalTraining({ goal }: Props) {
   );
 
   useOnMount(() => {
-    let sound: Howl | undefined;
+    let stop: Action | undefined;
     if (!isDone) {
-      sound = Actions.playPromptSound();
+      stop = Actions.playPromptSound();
     }
 
     return () => {
-      sound?.stop();
+      stop?.();
     };
   });
 
+  useTimer(1000);
+
   return (
     <div className="goal-training">
-      {/*elapsed={elapsedMin.toFixed(2)} minutes*/}
       {!goal ? (
         <>
           goal not found

@@ -11,26 +11,26 @@ import { isNeuError } from "./neutralinoext";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { NeuStorage } from "./storage";
 import { produce } from "immer";
-import { UnixTimestamp } from "./datetime";
+import { TrainingTime, UnixTimestamp } from "./datetime";
 import { Howl } from "howler";
 import { sleep } from "../common";
-import { Systray, tray } from "./systray";
+import { Systray } from "./systray";
 
 const storageName = "catchsup-data";
 
 export const useAppStore = create<State>()(
   persist(
     () =>
-    ({
-      page: "home",
-      activeTraining: null,
-      window: { focused: false },
-      dueStates: {},
+      ({
+        page: "home",
+        activeTraining: null,
+        window: { focused: false },
+        dueStates: {},
 
-      goals: [],
-      trainingLogs: [],
-      nextGoalID: 1,
-    } as State),
+        goals: [],
+        trainingLogs: [],
+        nextGoalID: 1,
+      } as State),
     {
       name: storageName,
       storage: createJSONStorage(() => NeuStorage),
@@ -45,7 +45,7 @@ export const useAppStore = create<State>()(
 );
 
 const GoalChecker = {
-  secondsFreq: 60,
+  secondsFreq: 50,
   intervalID: undefined as NodeJS.Timer | undefined,
   start() {
     clearInterval(GoalChecker.intervalID);
@@ -56,17 +56,19 @@ const GoalChecker = {
   },
 
   updateDueGoals() {
-    let hasDueNow = false;
-
     const state = useAppStore.getState();
-    const updatedDueStates = produce(state.dueStates, draft => {
+
+    console.log("focused", state.window.focused);
+
+    const dues: Goal[] = [];
+    const updatedDueStates = produce(state.dueStates, (draft) => {
       for (const goal of state.goals) {
         draft[goal.id] = Goal.checkDue(goal);
         if (draft[goal.id] === "due-now") {
-          hasDueNow = true;
+          dues.push(goal);
         }
       }
-    })
+    });
 
     useAppStore.setState({
       dueStates: updatedDueStates,
@@ -86,12 +88,31 @@ const GoalChecker = {
       Systray.setIconByDueState(Goal.checkAllDue(state.goals));
     }
 
-    if (hasDueNow && !state.activeTraining?.startTime) {
-      console.log("has due now");
+    const d = new Date();
+    const minDur = dues
+      .map((g) => TrainingTime.getDuration(Goal.getTrainingTime(g)))
+      .reduce((x, y) => Math.min(x, y), Infinity);
+    const canNotify = minDur < 30 ? true : d.getMinutes() % 30 === 0;
+
+    if (canNotify && dues.length > 0 && !state.activeTraining?.startTime) {
       const focused = useAppStore.getState().window.focused;
-      console.log({ focused });
       if (!focused) {
-        os.showNotification("oi", "you got stuffs to do", os.Icon.QUESTION);
+        const text = dues
+          .slice(0, 3)
+          .map((g) => "- " + g.title.slice(0, 100))
+          .join("\n");
+
+        (async function () {
+          for (let i = 0; i < 20; i++) {
+            const s = useAppStore.getState();
+            if (s.window.focused) {
+              break;
+            }
+            os.showNotification("hey, got free time?", text, os.Icon.QUESTION);
+            Actions.playShortPromptSound();
+            await sleep(5000);
+          }
+        })();
       }
     }
   },
@@ -113,7 +134,6 @@ const WindowStateChecker = {
     Actions.produceNextState((draft) => {
       draft.window.focused = false;
     });
-    console.log("blur");
   },
   onfocus() {
     Actions.produceNextState((draft) => {
@@ -128,26 +148,36 @@ const ActiveTrainingChecker = {
     clearInterval(ActiveTrainingChecker.intervalID);
     ActiveTrainingChecker.intervalID = setInterval(async () => {
       const { activeTraining, goals, window } = useAppStore.getState();
-      if (window.focused) return;
       if (!activeTraining?.startTime) return;
       if (activeTraining?.silenceNotification) return;
 
       const goal = goals.find((g) => g.id === activeTraining.goalID);
       if (!goal) return;
 
+      const elapsedMin =
+        (UnixTimestamp.current() - activeTraining.startTime) / 60;
+      const overtime = elapsedMin > goal.trainingDuration * 1.75;
+      if (window.focused && !overtime) return;
+
       if (!Goal.isTrainingDone(goal, activeTraining)) {
         return;
       }
       Systray.setIcon("time-up");
       os.showNotification("done", goal.title, os.Icon.QUESTION);
-    }, 60 * 1000);
+      Actions.playShortRewardSound();
+    }, 10 * 1000);
   },
   stop() {
     clearInterval(ActiveTrainingChecker.intervalID);
   },
 };
 
-export type AppPage = "home" | "create-goal" | "view-goal" | "training";
+export type AppPage =
+  | "home"
+  | "create-goal"
+  | "view-goal"
+  | "training"
+  | "about";
 
 interface TransientState {
   page: AppPage;
@@ -355,37 +385,42 @@ export const Actions = {
     }));
   },
 
+  playShortPromptSound() {
+    const sound = Audios.promptSoundShort;
+    return sound.play();
+  },
+  playShortRewardSound() {
+    const sound = Audios.rewardSoundShort;
+    return sound.play();
+  },
+
   playPromptSound() {
-    const sound = new Howl({
-      src: ["happy.mp3"],
-    });
+    const sound = Audios.promptSound;
+    const id = sound.play();
 
     (async function () {
       const duration = 10 * 1000;
-      sound.play();
-      sound.fade(1, 0, duration);
+      sound.fade(1, 0, duration, id);
       await sleep(duration);
-      sound.stop();
+      sound.stop(id);
     })();
 
-    return sound;
+    return () => sound.stop(id);
   },
 
   playRewardSound() {
-    const sound = new Howl({
-      src: ["reward.mp3"],
-    });
+    const sound = Audios.rewardSound;
+    const id = sound.play();
 
     (async function () {
       const duration = 15 * 1000;
       sound.seek(3);
-      sound.play();
-      sound.fade(1, 0, duration);
+      sound.fade(1, 0, duration, id);
       await sleep(duration);
-      sound.stop();
+      sound.stop(id);
     })();
 
-    return sound;
+    return () => sound.stop(id);
   },
 };
 
@@ -421,4 +456,20 @@ export const AppEvent = {
   ): Promise<events.Response> {
     return events.off(event, handler);
   },
+};
+
+const Audios = {
+  promptSound: new Howl({
+    src: ["happy.mp3"],
+  }),
+  rewardSound: new Howl({
+    src: ["reward.mp3"],
+  }),
+
+  promptSoundShort: new Howl({
+    src: ["happy_cut.mp3"],
+  }),
+  rewardSoundShort: new Howl({
+    src: ["reward_cut.mp3"],
+  }),
 };

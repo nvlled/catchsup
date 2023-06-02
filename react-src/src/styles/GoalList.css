@@ -21,6 +21,10 @@
   border-bottom: 2px solid transparent;
   align-items: center;
 }
+.goal-list-entry.disabled {
+  color: gray;
+}
+
 .goal-list-entry:hover {
   border-bottom: 2px solid #333;
   cursor: pointer;
@@ -33,6 +37,9 @@
   font-size: 130%;
   color: #bbb;
   margin-right: 10px;
+}
+.goal-list-entry-marker img {
+  width: 15px;
 }
 
 .goal-list-entry-marker.due-now {

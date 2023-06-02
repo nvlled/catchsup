@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Space } from "./components";
 import { Goal, goalDueStateImages } from "./lib/goal";
-import { useChanged } from "./lib/reactext";
+import { classes, useChanged } from "./lib/reactext";
 import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
 
 import { getRandomQuote } from "./quotes";
+import { call, partition } from "./lib/jsext";
 
 interface Props {
   goals: Goal[];
@@ -19,6 +20,14 @@ export default function GoalList({ goals }: Props) {
     setQuote(getRandomQuote());
   }
 
+  const sortedGoals = call(() => {
+    const [otherGoals, disabledGoals] = partition(
+      goals,
+      (g) => g.schedulingType !== "disabled"
+    );
+    return otherGoals.concat(disabledGoals);
+  });
+
   return (
     <div className="goal-list">
       <div
@@ -30,14 +39,17 @@ export default function GoalList({ goals }: Props) {
       </div>
       <br />
       <ul>
-        {goals.map((e) => (
+        {sortedGoals.map((e) => (
           <li
             key={e.id}
-            className="goal-list-entry"
+            className={classes(
+              "goal-list-entry",
+              e.schedulingType === "disabled" && "disabled"
+            )}
             onClick={() => handleOpen(e)}
           >
             <div
-              className={"goal-list-entry-marker " + dueStates[e.id]}
+              className={classes("goal-list-entry-marker ", dueStates[e.id])}
               title={
                 dueStates[e.id] === "due-now"
                   ? "do now!?"

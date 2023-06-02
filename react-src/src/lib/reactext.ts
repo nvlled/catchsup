@@ -19,3 +19,7 @@ export function useChanged<T>(
 
   return changed;
 }
+
+export function classes(...cs: (string | boolean)[]) {
+  return cs.filter((c) => !!c && typeof c === "string").join(" ");
+}

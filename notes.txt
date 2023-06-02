@@ -1,4 +1,50 @@
 
+# Fix or improve due notifications
+
+## Example case
+goal sched: late morning
+
+current time: 10:30
+
+The question is how often would it spam
+notifications? Will it just keep spamming
+until 12:00?
+
+Solutions:
+- remove time ranges and just put exact time
+- send notifications only every 30 minutes
+
+-----------------------
+
+uhh, I noticed there are a lot of open and
+unresolved issues in neutralinojs. At this rate,
+I might just consider using electron instead.
+Or I could just avoid using systray, not
+really an important feature.
+Then again, I think moving to electron
+wouldn't be too hard. I hardly used
+any unique or specific neutralino API.
+
+other issues that maybe I can fix:
+- wrong typescript definitions
+- the react sample repo doesn't work without building it first
+- neutralino keeps overwriting the script path
+
+The more I spend time with neutralino, the
+more I see problems. The maintainers are also
+possibly inactive as well, or unresponsive.
+Probably busy with other things.
+But at this point, neutralino is more like
+WIP side project. The glacial development pace
+is kind of expected, given the C++ codebase.
+
+Well, none of that matters for me. It
+works for me for my use case. I kind of wish
+they would fix the linux systray bug.
+
+
+--------------------
+
 # systray icon
 
 ## no active goal

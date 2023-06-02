@@ -34,7 +34,7 @@ export const goalDueStateImages: Record<GoalDueState, string> = {
   free: "",
 };
 
-export type SchedulingType = "daily" | "weekly" | "monthly";
+export type SchedulingType = "daily" | "weekly" | "monthly" | "disabled";
 
 export type SetOfWeekDays = Record<WeekDay, boolean>;
 export type SetOfDates = Record<number, boolean>;
@@ -49,6 +49,10 @@ export interface Goal {
   lastSkipCheck: DateNumber;
 
   trainingTime: TrainingTime;
+  resched?: {
+    trainingTime: TrainingTime;
+    date: DateNumber;
+  };
 
   trainingDuration: number; // minutes
   durationOptions: {
@@ -248,6 +252,10 @@ export const Goal = {
         return Math.ceil(numDays / interval);
       }
 
+      case "disabled": {
+        return 0;
+      }
+
       default:
         assertUnreachable(goal.schedulingType);
     }
@@ -295,6 +303,9 @@ export const Goal = {
 
         return (today - interval) as DateNumber;
       }
+      case "disabled": {
+        return null;
+      }
 
       default:
         assertUnreachable(goal.schedulingType);
@@ -337,6 +348,9 @@ export const Goal = {
         const { interval: dayInterval } = goal.schedulingData.daily;
         return d - lastUpdate >= dayInterval;
       }
+      case "disabled": {
+        return false;
+      }
 
       default:
         assertUnreachable(goal.schedulingType);
@@ -348,7 +362,7 @@ export const Goal = {
       return false;
     }
 
-    const trainingTime = goal.trainingTime;
+    const trainingTime = Goal.getTrainingTime(goal);
     return TrainingTime.inRange(trainingTime, time);
   },
 
@@ -362,8 +376,16 @@ export const Goal = {
       return false;
     }
 
-    const trainingTime = goal.trainingTime;
+    const trainingTime = Goal.getTrainingTime(goal);
     return TrainingTime.inRange(trainingTime, now);
+  },
+
+  getTrainingTime(goal: Goal) {
+    const today = DateNumber.current();
+    if (!goal.resched || goal.resched.date !== today) {
+      return goal.trainingTime;
+    }
+    return goal.resched.trainingTime;
   },
 
   checkDue(goal: Goal): GoalDueState {
@@ -372,13 +394,14 @@ export const Goal = {
       return "free";
     }
 
-    const trainingTime = goal.trainingTime;
+    const trainingTime = Goal.getTrainingTime(goal);
     if (TrainingTime.inRange(trainingTime, now)) {
       return "due-now";
     }
-    const [, endTime] = TrainingTime.getTimeRange(trainingTime);
+    const [startTime, endTime] = TrainingTime.getTimeRange(trainingTime);
+    const startTimestamp = UnixTimestamp.from(DateNumber.current(), startTime);
     const endTimestamp = UnixTimestamp.from(DateNumber.current(), endTime);
-    if (now < endTimestamp) {
+    if (now < endTimestamp || now < startTimestamp) {
       return "due-later";
     }
 

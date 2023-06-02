@@ -15,6 +15,7 @@ const schedulingTypeLabels: Record<SchedulingType, string> = {
   daily: "daily",
   weekly: "weekly",
   monthly: "monthly",
+  disabled: "disabled",
 };
 
 const weekLabels: Record<WeekDay, string> = {
@@ -43,17 +44,17 @@ interface SubProps {
   onChange: (goal: Goal) => void;
 }
 
-export function GoalEditor({ goal, onSubmit }: Props) {
+export function GoalEditor({ goal: goalProp, onSubmit }: Props) {
   const [state, setState] = useState<State>({ type: "ready" });
   const [editedGoal, setEditedGoal] = useState<Goal>(Goal.createEmpty());
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
   useOnMount(() => {
-    if (goal) {
-      setEditedGoal(goal);
-      if (titleRef.current) titleRef.current.value = goal.title;
-      if (descRef.current) descRef.current.value = goal.desc;
+    if (goalProp) {
+      setEditedGoal(goalProp);
+      if (titleRef.current) titleRef.current.value = goalProp.title;
+      if (descRef.current) descRef.current.value = goalProp.desc;
     }
   });
 
@@ -92,11 +93,15 @@ export function GoalEditor({ goal, onSubmit }: Props) {
       </div>
       <br />
       <br />
-      <div>
-        <h2>What ideal time?</h2>
-        <TimeSchedEditor goal={editedGoal} onChange={setEditedGoal} />
-      </div>
-      <br />
+      {editedGoal.schedulingType !== "disabled" && (
+        <>
+          <div>
+            <h2>What ideal time?</h2>
+            <TimeSchedEditor goal={editedGoal} onChange={setEditedGoal} />
+          </div>
+          <br />
+        </>
+      )}
       <div className="flex-between">
         <button
           onClick={handleSubmit}
@@ -104,7 +109,7 @@ export function GoalEditor({ goal, onSubmit }: Props) {
         >
           {editedGoal.id != 0 ? "save" : "create"}
         </button>
-        {goal && (
+        {goalProp && (
           <button className="goal-editor-delete-button" onClick={handleDelete}>
             delete
           </button>
@@ -138,6 +143,9 @@ export function GoalEditor({ goal, onSubmit }: Props) {
     const goal = produce(editedGoal, (draft) => {
       draft.title = title;
       draft.desc = desc;
+      if (draft.trainingTime != goalProp?.trainingTime) {
+        draft.resched = undefined;
+      }
     });
 
     if (goal.id <= 0) {
@@ -319,7 +327,7 @@ function DaySchedEditor({ goal, onChange }: SubProps) {
   }
 }
 
-function TimeSchedEditor({ goal, onChange }: SubProps) {
+export function TimeSchedEditor({ goal, onChange }: SubProps) {
   const produceChange = (fn: Producer<Goal>) =>
     onChange(
       produce(goal, (draft) => {

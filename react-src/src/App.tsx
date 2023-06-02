@@ -9,6 +9,7 @@ import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
 import { GoalTraining } from "./GoalTraining";
 import { useEffect } from "react";
+import { About } from "./About";
 
 let initialized = false;
 
@@ -41,7 +42,10 @@ function App() {
     <>
       {page === "home" ? (
         <>
-          <div className="flex-right">
+          <div className="flex-between">
+            <a href="#" title="??" onClick={() => Actions.changePage("about")}>
+              <img src="/logo.png" style={{ width: "30px" }} />
+            </a>
             <button onClick={() => Actions.changePage("create-goal")}>
               + add goal
             </button>
@@ -49,6 +53,8 @@ function App() {
           <br />
           <GoalList goals={goals} />
         </>
+      ) : page === "about" ? (
+        <About />
       ) : page === "create-goal" ? (
         <>
           <div className="flex-right">
@@ -68,7 +74,6 @@ function App() {
       ) : (
         <div>invalid appstate {page}</div>
       )}
-
       {/*
       <audio ref={audioRef} src="" controls />
       <button onClick={handlePlay}>play sound</button>

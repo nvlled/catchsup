@@ -39,3 +39,5 @@ export function isNeuError(e: unknown): e is NeuError {
 
   return true;
 }
+
+export type Action = () => void
