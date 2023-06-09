@@ -1,6 +1,12 @@
 
 - backup .storage
 
+- skip days (like on weekends)
+  Mon Tue Wed Thu Sat Sun
+  
+
+- port to tauri (or electron)
+
 - remove time ranges like early morning, late morning, etc.
   the time span is just too large to be meaningful
   better to have a more precise time to set
@@ -32,6 +38,7 @@
   remove trainingTime, but limit due 2-3 goals per day
   if there are more than 3 goals are done for a day,
   then stop notifications.
+
 
 - test on windows
 

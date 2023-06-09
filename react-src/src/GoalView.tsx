@@ -123,7 +123,8 @@ function ReschedForm({
       const now = TimeNumber.current();
       const [start] = TrainingTime.getTimeRange(Goal.getTrainingTime(goalProp));
       let t = now < start ? start : now;
-      t = TimeNumber.addHours(t, 15 / 60);
+      //t = TimeNumber.addHours(t, 15 / 60);
+      t = TimeNumber.addHours(t, 1 / 60);
       return TrainingTime.toString(t);
     })
   );
@@ -139,11 +140,7 @@ function ReschedForm({
   );
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const now = TimeNumber.addHours(TimeNumber.current(), 15 / 60);
-    const newTime = TimeNumber.fromString(e.target.value);
-    if (newTime > now) {
-      setTime(e.target.value);
-    }
+    setTime(e.target.value);
   }
 
   function handleSubmit() {

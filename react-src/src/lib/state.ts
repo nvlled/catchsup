@@ -58,8 +58,6 @@ const GoalChecker = {
   updateDueGoals() {
     const state = useAppStore.getState();
 
-    console.log("focused", state.window.focused);
-
     const dues: Goal[] = [];
     const updatedDueStates = produce(state.dueStates, (draft) => {
       for (const goal of state.goals) {
@@ -213,6 +211,7 @@ export const Actions = {
     GoalChecker.start();
     WindowStateChecker.start();
     ActiveTrainingChecker.start();
+
     GoalChecker.updateDueGoals();
 
     const { activeTraining } = useAppStore.getState();

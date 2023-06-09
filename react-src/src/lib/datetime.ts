@@ -155,7 +155,6 @@ export const TimeNumber = {
     const [hours, minutes] = TimeNumber.deconstruct(t);
     const addMin = Math.trunc((n % 1) * 60);
     const addHours = Math.trunc(n);
-    console.log({ addHours, addMin }, n % 1);
 
     const d = new Date(0, 0, 0, hours + addHours, minutes + addMin);
     return TimeNumber.fromDate(d);
@@ -194,15 +193,9 @@ export const TrainingTime = {
     return minutes;
   },
   inRange(tt: TrainingTime, t: UnixTimestamp) {
-    const [start, end] = TrainingTime.getTimeRange(tt);
-    let x = TrainingTime.fromUnixTimestamp(t);
-
-    if (typeof tt === "number") {
-      // ignore minutes in ones
-      // example, 12:31 -> 12:30
-      //          12:37 -> 12:30
-      x = Math.floor(x / 10) * 10;
-    }
+    const [start, e] = TrainingTime.getTimeRange(tt);
+    const end = start === e ? e + 5 * 60 : e;
+    const x = TrainingTime.fromUnixTimestamp(t);
 
     if (end >= start) {
       return x >= start && x <= end;

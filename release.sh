@@ -1,5 +1,7 @@
 #!/bin/bash
 
+node react-src/tool/rewrite-neutralino-script-src.js
+
 cd react-src
 npm run build
 
@@ -9,7 +11,6 @@ fi
 
 cd ..
 
-node react-src/tool/rewrite-neutralino-script-src.js
 
 
 neu build --release
