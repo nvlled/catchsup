@@ -1,52 +1,17 @@
+ooh, everything actually works well on windows,
+it behaves and looks exactly like here in linux
+that's actually impressive
+except the gorilla emoji though
+it looks dumb on windows
+What about macOS? I don't care about mac 
+so there's that.
 
-- backup .storage
-
-- skip days (like on weekends)
-  Mon Tue Wed Thu Sat Sun
-  
-
-- port to tauri (or electron)
-
-- remove time ranges like early morning, late morning, etc.
-  the time span is just too large to be meaningful
-  better to have a more precise time to set
-
-- add option trainingTime: any time (notifications for this will be hourly)
-  add option "limit goals per day"
-
-- add next to start button:
-  your time budget: 120 (min)
-  [start] [15 min] [-5][+5]
-
-- (planned) 
-  Always set trainingDuration to 15 minutes.
-  Add something like "points" to each goal. 
-  Every time a user finishes a goal, they earn a point.
-  The points can then be used to extend time.
-  What for? To avoid overdoing. A user may spend too much
-  time in a single day, making the method less useful
-  as the user may give up sooner.
-  I'm thinking, if I can do a task for more than an hour,
-  then I probably don't need this tool for that, as I already
-  have enough motivation to do that.
-  The tool would be most useful for new or uncomfortable things.
-  Having more restriction would be good to prevent the user
-  from going off-rails.
-  Otherwise, the app would just be a fancy notification tool.
-  
-- (planned)
-  remove trainingTime, but limit due 2-3 goals per day
-  if there are more than 3 goals are done for a day,
-  then stop notifications.
+I guess I don't need to sign the binary then?
 
 
-- test on windows
+- daily hour limit
 
-- presets, or default goals
-  will serve as an example on how to use
+- create seperate branch for the neutralino version
 
-- use scss modules
+- add anytime on ScheduleType
 
-----------------
-
-- motivators

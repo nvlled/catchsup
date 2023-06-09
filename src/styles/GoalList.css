@@ -1,0 +1,55 @@
+.goal-list {
+  padding: 10px;
+}
+
+.goal-list-quote {
+  font-weight: 700;
+  font-size: 120%;
+  cursor: pointer;
+}
+.goal-list-quote::before {
+  content: "“";
+}
+.goal-list-quote::after {
+  content: "”";
+}
+
+.goal-list-entry {
+  display: flex;
+  font-size: 100%;
+  margin-bottom: 10px;
+  border-bottom: 2px solid transparent;
+  align-items: center;
+}
+.goal-list-entry.disabled {
+  color: gray;
+}
+
+.goal-list-entry:hover {
+  border-bottom: 2px solid #333;
+  cursor: pointer;
+}
+
+.goal-list-entry-marker {
+  width: 12px;
+  font-family: monospace;
+  font-weight: 900;
+  font-size: 130%;
+  color: #bbb;
+  margin-right: 10px;
+}
+.goal-list-entry-marker img {
+  width: 15px;
+}
+
+.goal-list-entry-marker.due-now {
+  color: #0f0;
+}
+
+.goal-list-entry-marker.due-later {
+  color: #00f;
+}
+
+.goal-list-entry-marker.was-due {
+  color: #090;
+}
