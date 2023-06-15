@@ -1,15 +1,16 @@
 import { api } from "./api";
-import { GoalDueState } from "./goal";
+import { GoalDueState } from "../../shared/goal";
+import { IconName } from "../../shared/icon-names";
 
 //let intervalID: NodeJS.Timer | undefined = undefined;
 
 export const Systray = {
-  async setIcon(name: string) {
+  async setIcon(name: IconName) {
     api.setTray(name);
   },
 
   async setIconByDueState(state: GoalDueState) {
-    let icon = "blank";
+    let icon: IconName = "blank";
     switch (state) {
       case "due-now":
         icon = "due-now";

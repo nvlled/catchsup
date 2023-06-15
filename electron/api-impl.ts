@@ -1,11 +1,10 @@
 import { default as fsp } from "fs/promises";
-import { default as fs } from "fs";
 
 import path from "path";
 import { Notification, Tray, app, dialog, nativeImage } from "electron";
-import { API } from "./api-stub";
 import { Urgency, storageName } from "../shared";
 import { mainWindow } from "./main";
+import { getIconPath } from "../shared/icon-names";
 
 export function getPublicPath() {
   const publicPath = app.isPackaged
@@ -15,21 +14,17 @@ export function getPublicPath() {
   return path.normalize(publicPath);
 }
 
-export const iconNames = {
-  "due-now": "/icons/due-now.png",
-  "due-later": "/icons/due-later.png",
-  "was-due": "/icons/was-due.png",
-  "time-up": "/icons/time-up.png",
-  ongoing: "/icons/ongoing.png",
-  blank: "/logo.png",
-} as Record<string, string>;
-
 let tray: Tray | undefined;
 let lastIcon = "";
 
-export const apiImpl: API = {
-  readFileSync: fs.readFileSync,
-  writeFileSync: fs.writeFileSync,
+export const apiImpl = {
+  readFile: (filename: string) => {
+    return fsp.readFile(filename, "utf-8");
+  },
+  writeFile: (filename: string, data: string) => {
+    fsp.writeFile(filename, data, "utf-8");
+  },
+
   showOpenDialog: dialog.showOpenDialog,
   showSaveDialog: dialog.showSaveDialog,
   showErrorBox: dialog.showErrorBox,
@@ -63,7 +58,7 @@ export const apiImpl: API = {
     if (lastIcon === icon) return;
     lastIcon = icon;
 
-    const path = getPublicPath() + (iconNames[icon] ?? icon);
+    const path = getPublicPath() + (getIconPath(icon) ?? icon);
     console.log({ path });
 
     if (!tray) {

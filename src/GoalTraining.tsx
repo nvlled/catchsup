@@ -1,9 +1,10 @@
 import "./styles/GoalTraining.css";
-import { Goal } from "./lib/goal";
-import { Actions, useAppStore } from "./lib/state";
+import { Goal } from "../shared/goal";
+import { useAppStore } from "./lib/state";
+import { Actions } from "./lib/actions";
 import { Space } from "./components";
 import { useEffect, useRef, useState } from "react";
-import { UnixTimestamp } from "./lib/datetime";
+import { UnixTimestamp } from "../shared/datetime";
 import { useOnMount } from "./lib/reactext";
 import { marked } from "marked";
 import { GoalLogs } from "./GoalLogs";

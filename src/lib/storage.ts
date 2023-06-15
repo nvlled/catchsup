@@ -4,11 +4,11 @@ import { api } from "./api";
 export const storage = {
   getData: async (key: string): Promise<string> => {
     const filename = await api.withDataDir(key);
-    return api.readFileSync(filename, "utf-8");
+    return await api.readFile(filename);
   },
   setData: async (key: string, data: string): Promise<void> => {
     const filename = await api.withDataDir(key);
-    api.writeFileSync(filename, data);
+    api.writeFile(filename, data);
   },
 };
 

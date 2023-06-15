@@ -170,6 +170,7 @@ export const TimeNumber = {
 export type TimeRange = [startTime: TimeNumber, endTime: TimeNumber];
 
 export type TimeRangeLabel =
+  | "auto"
   | "morning"
   | "afternoon"
   | "early morning"
@@ -238,6 +239,7 @@ export const TrainingTime = {
   },
 
   ranges: {
+    auto: [0, 2359],
     morning: [600, 1200],
     afternoon: [1200, 1800],
     "early morning": [600, 900],

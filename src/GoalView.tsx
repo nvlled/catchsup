@@ -1,12 +1,13 @@
 import "./styles/GoalView.css";
 
 import { ChangeEvent, useState } from "react";
-import { Goal } from "./lib/goal";
-import { Actions, useAppStore } from "./lib/state";
+import { Goal } from "../shared/goal";
+import { useAppStore } from "./lib/state";
+import { Actions } from "./lib/actions";
 import { GoalEditor } from "./GoalEditor";
 import { marked } from "marked";
 import { Space } from "./components";
-import { DateNumber, TimeNumber, TrainingTime } from "./lib/datetime";
+import { DateNumber, TimeNumber, TrainingTime } from "../shared/datetime";
 import { GoalLogs } from "./GoalLogs";
 import { produce } from "immer";
 import { call } from "./lib/jsext";

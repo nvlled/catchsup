@@ -1,3 +1,75 @@
+New changes:
+- only one goal should be due at a time
+  on the home screen, show the due goal at the top,
+  and add button below it to show all goals at the bottom
+
+- the default should be that goal have no particular
+  scheduled time
+
+- remove all other tray icons besides
+  due-now and default logo
+
+- scheduling priority
+  1. due goals with specific time
+  2. due goals with specific range
+  3. due goals with no specific time
+  4 last session time
+  - add custom priority to goal (applies only to (3) and (4))
+
+- max session hours
+- min/max times a goal can be done in a day
+
+- notification frequency or interruptiveness should change
+  on the elapsed time since the goal was due
+  - make a gorilla run around the screen
+
+- one-time tasks
+
+- cooldown time
+  like when I need to stop reading, and take notes
+
+- redefine terms to something less imperative
+  - goal
+  - training
+
+
+
+refactor, do this later after changes have been made
+- simplify schedulingData
+  schedulingData: {
+    dayilyInterval: number;
+    dayOfWeeks: SetOfWeekDays;
+    dayOfMonths: SetOfDates;
+  };
+
+My reason for this is that I find manual scheduling
+at certain hours not very helpful. Ideally,
+what I want the app to do this is:
+give me something to do right now, 
+I don't particularly care which,
+just something. Don't make me decide,
+as that adds more friction to doing it.
+
+I don't care what particular time I 
+want to do something. Initially, I thought
+specific times can be used as a prompt or trigger
+for actions. In practice, it doesn't work.
+
+Of course, I'm not removing manual scheduling,
+as that might have use cases later on.
+But default would be to just auto-schedule.
+
+- change background color to dark tomato red #FF6347, because why not?
+  white background and black text is so dull to look at,
+  and I stare at it a lot. Being dull is the point?
+  What about manga, is that dull to look at?
+  No, manga and drawing are a completely different matter.
+
+AppState {
+
+}
+
+--------------------------
 
 # Fix or improve due notifications
 

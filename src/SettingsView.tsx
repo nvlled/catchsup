@@ -3,7 +3,8 @@ import { api } from "./lib/api";
 import { useOnMount } from "./lib/reactext";
 import { call } from "./lib/jsext";
 import { storageName } from "../shared";
-import { Actions, parseState } from "./lib/state";
+import { parseState } from "./lib/state";
+import { Actions } from "./lib/actions";
 import { Space } from "./components";
 
 export function SettingsView() {
@@ -45,8 +46,8 @@ export function SettingsView() {
       const filename = res.filePaths[0];
       const destFile = await api.withAbsoluteDataDir(storageName);
       const backupFile = await api.withAbsoluteDataDir(storageName + ".backup");
-      const oldData = await api.readFileSync(destFile, "utf-8");
-      const data = await api.readFileSync(filename, "utf-8");
+      const oldData = await api.readFile(destFile);
+      const data = await api.readFile(filename);
 
       let obj: unknown = undefined;
       let err: unknown | undefined = undefined;
@@ -63,11 +64,9 @@ export function SettingsView() {
         "state" in obj &&
         parseState(obj.state)
       ) {
-        await api.writeFileSync(backupFile, oldData);
-        await api.writeFileSync(destFile, data);
+        await api.writeFile(backupFile, oldData);
+        await api.writeFile(destFile, data);
 
-        console.log(destFile, obj.state);
-        console.log(new TextDecoder().decode(await api.readFileSync(destFile)));
         window.location.reload();
       } else {
         api.showErrorBox("failed to import", "Invalid data file: " + err + "");

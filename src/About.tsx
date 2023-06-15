@@ -1,4 +1,4 @@
-import { Actions } from "./lib/state";
+import { Actions } from "./lib/actions";
 
 export function About() {
   return (

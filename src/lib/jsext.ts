@@ -8,7 +8,7 @@ export function callWith<A, B>(x: A, fn: (x: A) => B) {
 export function partition<T>(
   xs: T[],
   predicate: (x: T) => boolean
-): [T[], T[]] {
+): [ok: T[], nope: T[]] {
   const result: [T[], T[]] = [[], []];
   for (const x of xs) {
     result[1 - +predicate(x)].push(x);

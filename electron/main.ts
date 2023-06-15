@@ -1,16 +1,27 @@
-import { app, BrowserView, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
-import { apiImpl, getPublicPath } from "./api-implementation";
+import { apiImpl, getPublicPath } from "./api-impl";
 import { IdentityFn } from "../shared";
 import { mkdirSync } from "fs";
-import { call, callWith } from "../src/lib/jsext";
+import { registerElectronEventHandlers } from "../src/lib/electron-events";
 
-export function createHandlers(ns: string, obj: Record<string, IdentityFn>) {
-  for (const [k, fn] of Object.entries(obj)) {
-    ipcMain.handle(
-      ns + ":" + k,
-      (_: Electron.IpcMainInvokeEvent, ...args: any[]) => fn(...args)
-    );
+export function createHandlers(
+  ns: string,
+  obj: Record<string, object | IdentityFn>
+) {
+  for (const [k, value] of Object.entries(obj)) {
+    if (typeof value === "function") {
+      console.log(">", ns + "." + k);
+      ipcMain.handle(
+        ns + "." + k,
+        (_: Electron.IpcMainInvokeEvent, ...args: unknown[]) => value(...args)
+      );
+    } else {
+      createHandlers(
+        ns + "." + k,
+        value as Record<string, object | IdentityFn>
+      );
+    }
   }
 }
 
@@ -35,6 +46,7 @@ const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 function createWindow() {
   initStorage();
   createHandlers("api", apiImpl);
+  registerElectronEventHandlers();
 
   mainWindow = new BrowserWindow({
     title: "catchsup" + (app.isPackaged ? "" : "-dev"),

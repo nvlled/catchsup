@@ -1,34 +1,38 @@
-import type { readFileSync, writeFileSync } from "fs";
-import type { join as joinPath } from "path";
-import type { dialog } from "electron";
-import { Urgency, identityFn } from "../shared";
+import { IdentityFn, identityFn } from "../shared";
+import { apiImpl } from "./api-impl";
+
+type PromisedReturn<F extends IdentityFn> = (
+  ...xs: Parameters<F>
+) => Promise<ReturnType<F>>;
 
 export const apiStub = {
-  readFileSync: identityFn as typeof readFileSync,
-  writeFileSync: identityFn as typeof writeFileSync,
-  showOpenDialog: identityFn as typeof dialog.showOpenDialog,
-  showSaveDialog: identityFn as typeof dialog.showSaveDialog,
-  showErrorBox: identityFn as typeof dialog.showErrorBox,
+  readFile: identityFn as PromisedReturn<typeof apiImpl.readFile>,
+  writeFile: identityFn as PromisedReturn<typeof apiImpl.writeFile>,
+  showOpenDialog: identityFn as PromisedReturn<typeof apiImpl.showOpenDialog>,
+  showSaveDialog: identityFn as PromisedReturn<typeof apiImpl.showSaveDialog>,
+  showErrorBox: identityFn as PromisedReturn<typeof apiImpl.showErrorBox>,
 
-  exportDataTo: identityFn as (filename: string) => void,
-  importDataFrom: identityFn as (filename: string) => void,
+  exportDataTo: identityFn as PromisedReturn<typeof apiImpl.exportDataTo>,
+  importDataFrom: identityFn as PromisedReturn<typeof apiImpl.importDataFrom>,
 
-  showNotification: identityFn as (
-    title: string,
-    body: string,
-    urgency?: Urgency
-  ) => void,
+  showNotification: identityFn as PromisedReturn<
+    typeof apiImpl.showNotification
+  >,
 
-  setTray: identityFn as (icon: string) => void,
+  setTray: identityFn as PromisedReturn<typeof apiImpl.setTray>,
 
-  joinPath: identityFn as typeof joinPath,
+  joinPath: identityFn as PromisedReturn<typeof apiImpl.joinPath>,
 
-  requestWindowAttention: identityFn as (yes: boolean) => void,
+  requestWindowAttention: identityFn as PromisedReturn<
+    typeof apiImpl.requestWindowAttention
+  >,
 
-  getAppPath: identityFn as () => string,
+  getAppPath: identityFn as PromisedReturn<typeof apiImpl.getAppPath>,
 
-  withDataDir: identityFn as (filename: string) => string,
-  withAbsoluteDataDir: identityFn as (filename: string) => string,
-};
+  withDataDir: identityFn as PromisedReturn<typeof apiImpl.withDataDir>,
+  withAbsoluteDataDir: identityFn as PromisedReturn<
+    typeof apiImpl.withAbsoluteDataDir
+  >,
+} as const;
 
 export type API = typeof apiStub;

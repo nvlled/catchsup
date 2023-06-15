@@ -1,13 +1,12 @@
-ooh, everything actually works well on windows,
-it behaves and looks exactly like here in linux
-that's actually impressive
-except the gorilla emoji though
-it looks dumb on windows
-What about macOS? I don't care about mac 
-so there's that.
 
-I guess I don't need to sign the binary then?
+- disable notifications when inactive
 
+- open devtools with ~ key
+
+- remove windowchecker.focused
+
+- notify first once even when focused
+  when time is up
 
 - daily hour limit
 

@@ -4,7 +4,8 @@ import "./styles/App.css";
 
 import { useOnMount } from "./lib/reactext";
 import GoalList from "./GoalList";
-import { Actions, useAppStore } from "./lib/state";
+import { useAppStore } from "./lib/state";
+import { Actions } from "./lib/actions";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
 import { GoalTraining } from "./GoalTraining";
@@ -12,6 +13,8 @@ import { useEffect } from "react";
 import { About } from "./About";
 import { SettingsView } from "./SettingsView";
 import { Space } from "./components";
+import { ElectronEvents, api } from "./lib/api";
+import { Services } from "./lib/services";
 
 let initialized = false;
 
@@ -21,10 +24,17 @@ function App() {
     console.log("mounted");
     initialized = true;
 
+    const fn = () => console.log("* screen locked");
+    ElectronEvents.on("lock-screen", fn);
+
     Actions.init();
+    Services.startAll();
 
     return () => {
+      ElectronEvents.off("lock-screen", fn);
+
       Actions.deinit();
+      Services.stopAll();
       console.log("app unmount");
     };
   });

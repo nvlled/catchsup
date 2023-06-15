@@ -1,13 +1,13 @@
 import React, { ChangeEvent, useRef, useState } from "react";
-import { TrainingTime, WeekDay } from "./lib/datetime";
-import { Goal, GoalID, SchedulingType } from "./lib/goal";
+import { TrainingTime, WeekDay } from "../shared/datetime";
+import { Goal, GoalID, SchedulingType } from "../shared/goal";
 import { useOnMount } from "./lib/reactext";
-import { Actions } from "./lib/state";
+import { Actions } from "./lib/actions";
 import { ArrayUtil } from "./lib/util";
 import "./styles/GoalEditor.css";
 import { produce } from "immer";
-import { TimeRangeLabel } from "./lib/datetime";
-import { TimeNumber } from "./lib/datetime";
+import { TimeRangeLabel } from "../shared/datetime";
+import { TimeNumber } from "../shared/datetime";
 import { Space } from "./components";
 import { Producer } from "./lib/immerext";
 

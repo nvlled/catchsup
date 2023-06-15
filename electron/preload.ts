@@ -1,19 +1,24 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { apiStub } from "./api-stub";
-import { IdentityFn } from "../shared";
+import { offElectronEvent, onElectronEvent } from "../src/lib/electron-events";
 
-export function createInvokers(ns: string, obj: Record<string, IdentityFn>) {
+function createInvokers(ns: string, obj: object) {
   const result: Record<string, unknown> = {};
-  for (const k of Object.keys(obj)) {
-    result[k] = (...args: unknown[]) => {
-      return ipcRenderer.invoke(ns + ":" + k, ...args);
-    };
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === "function") {
+      console.log(">>", ns + "." + k);
+      result[k] = async (...args: unknown[]) => {
+        const res = await ipcRenderer.invoke(ns + "." + k, ...args);
+        return await Promise.resolve(res);
+      };
+    } else if (typeof v === "object") {
+      result[k] = createInvokers(ns + "." + k, v);
+    } else {
+      result[k] = v;
+    }
   }
-  console.log("invokers", result);
   return result;
 }
-
-contextBridge.exposeInMainWorld("api", createInvokers("api", apiStub));
 
 function domReady(
   condition: DocumentReadyState[] = ["complete", "interactive"]
@@ -100,6 +105,10 @@ function useLoading() {
 }
 
 // ----------------------------------------------------------------------
+
+contextBridge.exposeInMainWorld("api", createInvokers("api", apiStub));
+contextBridge.exposeInMainWorld("onElectronEvent", onElectronEvent);
+contextBridge.exposeInMainWorld("offElectronEvent", offElectronEvent);
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 const { appendLoading, removeLoading } = useLoading();

@@ -1,4 +1,4 @@
-import { assertUnreachable } from "./asset";
+import { assertUnreachable } from "./assert";
 import {
   TrainingTime,
   DateNumber,
@@ -44,6 +44,8 @@ export interface Goal {
   title: string;
   desc: string;
 
+  oneTime: boolean | null;
+
   createdTime: UnixTimestamp;
   updatedTime: UnixTimestamp;
   lastSkipCheck: DateNumber;
@@ -55,6 +57,8 @@ export interface Goal {
   };
 
   trainingDuration: number; // minutes
+  cooldownDuration: number | null;
+
   durationOptions: {
     autoAdjust: boolean;
 
@@ -70,6 +74,7 @@ export interface Goal {
   schedulingData: {
     daily: {
       interval: number;
+      dueCount: number | null;
     };
     weekly: {
       dayOfWeeks: SetOfWeekDays;
@@ -87,6 +92,7 @@ export interface Goal {
         min: number;
         max: number;
       };
+      maxDueCount: number | null;
     };
   };
 
@@ -104,14 +110,17 @@ export const Goal = {
       id: 0,
       title: "",
       desc: "",
+      oneTime: false,
 
       createdTime: UnixTimestamp.current(),
-      updatedTime: UnixTimestamp.current(),
+      updatedTime: 0 as UnixTimestamp,
       lastSkipCheck: DateNumber.current(),
 
       trainingTime: "early morning",
 
       trainingDuration: 15,
+      cooldownDuration: null,
+
       durationOptions: {
         autoAdjust: false,
 
@@ -127,6 +136,7 @@ export const Goal = {
       schedulingData: {
         daily: {
           interval: 1,
+          dueCount: 0,
         },
         weekly: {
           dayOfWeeks: {} as SetOfWeekDays,
@@ -144,6 +154,7 @@ export const Goal = {
             min: 1,
             max: 5,
           },
+          maxDueCount: 0,
         },
       },
 

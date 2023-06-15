@@ -8,6 +8,10 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nvlled/catchsup.git"
+  },
   "dependencies": {
     "@types/howler": "^2.2.7",
     "@types/marked": "^4.3.0",
@@ -34,7 +38,8 @@
     "typescript": "^5.0.2",
     "vite": "^4.3.2",
     "vite-plugin-electron": "^0.11.2",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vitest": "^0.32.0"
   },
   "main": "dist-electron/main.js"
 }

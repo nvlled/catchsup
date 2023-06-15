@@ -3,8 +3,8 @@ import "./styles/GoalLogs.css";
 import { marked } from "marked";
 import { useState } from "react";
 import { Space } from "./components";
-import { UnixTimestamp } from "./lib/datetime";
-import { TrainingLog } from "./lib/goal";
+import { UnixTimestamp } from "../shared/datetime";
+import { TrainingLog } from "../shared/goal";
 import { produce } from "immer";
 
 export function GoalLogs({ logs }: { logs: TrainingLog[] }) {
