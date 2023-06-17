@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Space } from "./components";
 import { Goal, goalDueStateImages } from "../shared/goal";
-import { classes, useChanged } from "./lib/reactext";
+import { classes, useChanged, useTimer } from "./lib/reactext";
 import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
 
@@ -13,12 +13,15 @@ interface Props {
 }
 
 export default function GoalList({ goals }: Props) {
+  const scheduler = useAppStore((state) => state.scheduler);
   const [quote, setQuote] = useState(getRandomQuote());
-  const dueStates = useAppStore((state) => state.dueStates) ?? {};
+  const dueStates = Goal.getDueStates(goals);
 
   if (useChanged(goals)) {
     setQuote(getRandomQuote());
   }
+
+  useTimer(60 * 1000);
 
   const sortedGoals = call(() => {
     const [otherGoals, disabledGoals] = partition(
@@ -28,8 +31,22 @@ export default function GoalList({ goals }: Props) {
     return otherGoals.concat(disabledGoals);
   });
 
+  const goalID = scheduler.goal?.id;
+  const dueGoal = !goalID ? undefined : goals.find((g) => g.id === goalID);
+
   return (
     <div className="goal-list">
+      {dueGoal && (
+        <div>
+          <h1
+            className="goal-list-due-goal"
+            onClick={() => handleOpen(dueGoal)}
+          >
+            <a href="#">{dueGoal.title}</a>
+          </h1>
+        </div>
+      )}
+      <br />
       <div
         className="goal-list-quote"
         title={quote.from}
@@ -38,6 +55,7 @@ export default function GoalList({ goals }: Props) {
         {quote.text}
       </div>
       <br />
+
       <ul>
         {sortedGoals.map((e) => (
           <li

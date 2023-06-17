@@ -19,6 +19,8 @@ export interface TrainingLog {
 export type ActiveTraining = {
   goalID: GoalID;
   startTime?: UnixTimestamp;
+  timeUp?: UnixTimestamp;
+  cooldownDuration?: number;
   silenceNotification?: boolean;
 } | null;
 
@@ -57,7 +59,7 @@ export interface Goal {
   };
 
   trainingDuration: number; // minutes
-  cooldownDuration: number | null;
+  cooldownDuration: number | undefined;
 
   durationOptions: {
     autoAdjust: boolean;
@@ -105,9 +107,9 @@ export interface Goal {
 }
 
 export const Goal = {
-  createEmpty(): Goal {
+  createEmpty(id = 0): Goal {
     return {
-      id: 0,
+      id,
       title: "",
       desc: "",
       oneTime: false,
@@ -116,10 +118,10 @@ export const Goal = {
       updatedTime: 0 as UnixTimestamp,
       lastSkipCheck: DateNumber.current(),
 
-      trainingTime: "early morning",
+      trainingTime: "auto",
 
       trainingDuration: 15,
-      cooldownDuration: null,
+      cooldownDuration: undefined,
 
       durationOptions: {
         autoAdjust: false,
@@ -391,6 +393,11 @@ export const Goal = {
     return TrainingTime.inRange(trainingTime, now);
   },
 
+  isDue(goal: Goal) {
+    const state = Goal.checkDue(goal);
+    return state === "due-now" || state === "was-due";
+  },
+
   getTrainingTime(goal: Goal) {
     const today = DateNumber.current();
     if (!goal.resched || goal.resched.date !== today) {
@@ -417,6 +424,14 @@ export const Goal = {
     }
 
     return "was-due";
+  },
+
+  getDueStates(goals: Goal[]): Record<GoalID, GoalDueState> {
+    const result: Record<GoalID, GoalDueState> = {};
+    for (const goal of goals) {
+      result[goal.id] = Goal.checkDue(goal);
+    }
+    return result;
   },
 
   checkAllDue(goals: Goal[]): GoalDueState {

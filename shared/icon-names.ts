@@ -4,7 +4,7 @@ export const iconNames = {
   "was-due": "/icons/was-due.png",
   "time-up": "/icons/time-up.png",
   ongoing: "/icons/ongoing.png",
-  blank: "/logo.png",
+  blank: "/icons/icon.png",
 } as const;
 
 export type IconName = keyof typeof iconNames;

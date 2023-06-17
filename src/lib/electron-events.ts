@@ -1,4 +1,4 @@
-import { app, ipcRenderer, powerMonitor } from "electron";
+import { ipcRenderer, powerMonitor } from "electron";
 import { IdentityFn } from "../../shared";
 import { assertUnreachable } from "../../shared/assert";
 

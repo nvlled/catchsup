@@ -1,14 +1,14 @@
 import { produce } from "immer";
 import { storageName } from "../../shared";
 import { UnixTimestamp } from "../../shared/datetime";
-import { Goal, GoalID, GoalDueState } from "../../shared/goal";
+import { Goal } from "../../shared/goal";
 import { Scheduler } from "../../shared/scheduler";
 import { sleep } from "../common";
 import { AppPage, useAppStore, parseState, State } from "./state";
 import { storage } from "./storage";
-import { Systray } from "./systray";
 import { Audios } from "./audios";
 import { SchedulerService } from "./services/scheduler-service";
+import { AppEvent } from "./app-event";
 
 export const Actions = {
   changePage(newPage: AppPage) {
@@ -47,6 +47,7 @@ export const Actions = {
       if (!parseState(obj)) return null;
       return obj;
     } catch (e) {
+      console.log("failed to parse app data", e);
       return null;
     }
   },
@@ -78,24 +79,23 @@ export const Actions = {
       if (index >= 0) {
         draft.goals[index] = goal;
       }
-      if (!draft.dueStates) {
-        draft.dueStates = {};
-      }
-      draft.dueStates[goal.id] = Goal.checkDue(goal);
     });
 
-    const { goals } = useAppStore.getState();
-    Systray.setIconByDueState(Goal.checkAllDue(goals));
+    AppEvent.dispatch("goal-modified", goal.id);
+
+    //const { goals } = useAppStore.getState();
+    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
-  cancelGoalTraining() {
+  cancelGoalTraining(goal: Goal) {
     Actions.produceNextState((draft) => {
       draft.page = "home";
       draft.activeTraining = null;
     });
 
-    const { goals } = useAppStore.getState();
-    Systray.setIconByDueState(Goal.checkAllDue(goals));
+    AppEvent.dispatch("goal-cancelled", goal.id);
+    //const { goals } = useAppStore.getState();
+    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   startGoalTraining(goal: Goal) {
@@ -105,10 +105,12 @@ export const Actions = {
         goalID: goal.id,
         startTime: UnixTimestamp.current(),
         silenceNotification: false,
+        cooldownDuration: goal.cooldownDuration,
       };
     });
 
-    Systray.setIcon("ongoing");
+    AppEvent.dispatch("goal-started", goal.id);
+    //Systray.setIcon("ongoing");
   },
 
   toggleActiveTrainingNotifications() {
@@ -132,14 +134,8 @@ export const Actions = {
         });
       }
 
-      const dueStates: Record<GoalID, GoalDueState> = {};
-      for (const goal of draft.goals) {
-        dueStates[goal.id] = Goal.checkDue(goal);
-      }
-
       draft.page = "home";
       draft.activeTraining = null;
-      draft.dueStates = dueStates;
       draft.lastGoalFinish = UnixTimestamp.current();
       draft.trainingLogs.push({
         goalID: goal.id,
@@ -149,8 +145,10 @@ export const Actions = {
       });
     });
 
-    const { goals } = useAppStore.getState();
-    Systray.setIconByDueState(Goal.checkAllDue(goals));
+    AppEvent.dispatch("goal-finished", goal.id);
+
+    //const { goals } = useAppStore.getState();
+    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   createGoal(goal: Goal) {
@@ -177,6 +175,14 @@ export const Actions = {
         draft.push(newGoal);
       }),
     }));
+  },
+
+  goalTimeUp() {
+    Actions.produceNextState((draft) => {
+      if (draft.activeTraining) {
+        draft.activeTraining.timeUp = UnixTimestamp.current();
+      }
+    });
   },
 
   playShortPromptSound() {

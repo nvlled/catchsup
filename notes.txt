@@ -53,7 +53,8 @@ as that adds more friction to doing it.
 I don't care what particular time I 
 want to do something. Initially, I thought
 specific times can be used as a prompt or trigger
-for actions. In practice, it doesn't work.
+for actions. In practice, it doesn't work usuall.
+Except for meditation at early evening.
 
 Of course, I'm not removing manual scheduling,
 as that might have use cases later on.
@@ -64,6 +65,9 @@ But default would be to just auto-schedule.
   and I stare at it a lot. Being dull is the point?
   What about manga, is that dull to look at?
   No, manga and drawing are a completely different matter.
+  I guess one reason is that a really strong, bright
+  color acts as a stimulation for doing. Maybe.
+  For me, anyway.
 
 AppState {
 

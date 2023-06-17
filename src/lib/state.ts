@@ -1,11 +1,5 @@
 import { create } from "zustand";
-import {
-  Goal,
-  GoalID,
-  GoalDueState,
-  TrainingLog,
-  ActiveTraining,
-} from "../../shared/goal";
+import { Goal, GoalID, TrainingLog, ActiveTraining } from "../../shared/goal";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { NeuStorage } from "./storage";
 import { UnixTimestamp } from "../../shared/datetime";
@@ -22,7 +16,6 @@ export type AppPage =
 
 interface TransientState {
   page: AppPage;
-  dueStates: Record<GoalID, GoalDueState>;
   scheduler: Scheduler;
 
   window: {
@@ -52,7 +45,6 @@ export const useAppStore = create<State>()(
       ({
         page: "home",
         activeTraining: null,
-        dueStates: {},
         lastNotification: null,
         lastGoalFinish: null,
         scheduler: Scheduler.create(),

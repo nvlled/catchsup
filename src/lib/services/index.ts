@@ -1,5 +1,4 @@
 import { ActiveTrainingChecker } from "./active-training-checker";
-import { GoalChecker } from "./goal-checker";
 import { SchedulerService } from "./scheduler-service";
 import { ScreenChecker } from "./screen-checker";
 import { WindowStateChecker } from "./window-checker";
@@ -10,7 +9,6 @@ interface Service {
 }
 
 const services: Service[] = [
-  GoalChecker,
   WindowStateChecker,
   ActiveTrainingChecker,
   ScreenChecker,
@@ -19,12 +17,14 @@ const services: Service[] = [
 
 export const Services = {
   startAll() {
+    console.log("starting services");
     for (const s of services) {
       s.start();
     }
   },
 
   stopAll() {
+    console.log("stopping services");
     for (const s of services) {
       s.stop();
     }

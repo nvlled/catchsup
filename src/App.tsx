@@ -9,46 +9,62 @@ import { Actions } from "./lib/actions";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
 import { GoalTraining } from "./GoalTraining";
-import { useEffect } from "react";
 import { About } from "./About";
 import { SettingsView } from "./SettingsView";
 import { Space } from "./components";
-import { ElectronEvents, api } from "./lib/api";
 import { Services } from "./lib/services";
+import { api } from "./lib/api";
+
+/*
+const ps = ...
+
+await ps.finish();
+    ps.push((async () => {
+      await Actions.init();
+      Services.startAll();
+    })());
+
+return () => {
+    await ps.finish()
+    console.log("unmounted");
+    ps.push(...)
+}
+*/
 
 let initialized = false;
-
 function App() {
   useOnMount(() => {
-    if (initialized) return;
     console.log("mounted");
-    initialized = true;
 
-    const fn = () => console.log("* screen locked");
-    ElectronEvents.on("lock-screen", fn);
+    (async () => {
+      if (!initialized) {
+        initialized = true;
+        await Actions.init();
+        Services.startAll();
+      }
+    })();
 
-    Actions.init();
-    Services.startAll();
+    function handleTilde(e: KeyboardEvent) {
+      if (e.key === "~") {
+        api.openDevTools();
+      }
+    }
+    window.addEventListener("keypress", handleTilde);
 
     return () => {
-      ElectronEvents.off("lock-screen", fn);
+      console.log("unmounted");
+      window.removeEventListener("keypress", handleTilde);
 
-      Actions.deinit();
-      Services.stopAll();
-      console.log("app unmount");
+      //Actions.deinit();
+      //Services.stopAll();
     };
   });
 
-  const [dueStates, page, goals, viewGoal] = useAppStore((state) => [
-    state.dueStates,
+  const [page, goals, viewGoal] = useAppStore((state) => [
     state.page,
     state.goals,
     state.goals.find((e) => e.id === state.activeTraining?.goalID),
   ]);
-
-  useEffect(() => {
-    console.log("due states changed");
-  }, [dueStates]);
 
   return (
     <>

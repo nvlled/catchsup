@@ -53,3 +53,13 @@
 .goal-list-entry-marker.was-due {
   color: #090;
 }
+
+.goal-list-due-goal {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.goal-list-due-goal a {
+  color: #060;
+  text-decoration: none;
+}

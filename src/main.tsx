@@ -1,8 +1,8 @@
+import "./styles/index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 
-import "./styles/index.css";
 import { enableMapSet } from "immer";
 import { marked } from "marked";
 

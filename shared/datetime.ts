@@ -201,7 +201,7 @@ export const TrainingTime = {
   },
   inRange(tt: TrainingTime, t: UnixTimestamp) {
     const [start, e] = TrainingTime.getTimeRange(tt);
-    const end = start === e ? e + 5 * 60 : e;
+    const end = start === e ? TimeNumber.addHours(e, 5 / 60) : e;
     const x = TrainingTime.fromUnixTimestamp(t);
 
     if (end >= start) {

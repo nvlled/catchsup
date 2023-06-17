@@ -3,7 +3,7 @@ import { TrainingTime, WeekDay } from "../shared/datetime";
 import { Goal, GoalID, SchedulingType } from "../shared/goal";
 import { useOnMount } from "./lib/reactext";
 import { Actions } from "./lib/actions";
-import { ArrayUtil } from "./lib/util";
+import { ArrayUtil } from "./lib/jsext";
 import "./styles/GoalEditor.css";
 import { produce } from "immer";
 import { TimeRangeLabel } from "../shared/datetime";

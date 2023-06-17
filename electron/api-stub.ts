@@ -33,6 +33,8 @@ export const apiStub = {
   withAbsoluteDataDir: identityFn as PromisedReturn<
     typeof apiImpl.withAbsoluteDataDir
   >,
+
+  openDevTools: identityFn as PromisedReturn<typeof apiImpl.openDevTools>,
 } as const;
 
 export type API = typeof apiStub;

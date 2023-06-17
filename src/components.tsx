@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrayUtil } from "./lib/util";
+import { ArrayUtil } from "./lib/jsext";
 
 export function Space({ count }: { count?: number }) {
   return (

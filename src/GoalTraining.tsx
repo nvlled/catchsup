@@ -3,9 +3,9 @@ import { Goal } from "../shared/goal";
 import { useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import { Space } from "./components";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { UnixTimestamp } from "../shared/datetime";
-import { useOnMount } from "./lib/reactext";
+import { useOnMount, useTimer } from "./lib/reactext";
 import { marked } from "marked";
 import { GoalLogs } from "./GoalLogs";
 import { Action } from "./lib/jsext";
@@ -15,19 +15,6 @@ export interface Props {
 }
 
 type ConfirmState = "accept" | "reject" | "prompt";
-
-function useTimer(ms: number) {
-  const [counter, setCounter] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCounter((counter) => counter + 1);
-    }, ms);
-    return () => clearInterval(id);
-  }, [ms]);
-
-  return counter;
-}
 
 export function GoalTraining({ goal }: Props) {
   const activeTraining = useAppStore((state) => state.activeTraining);
@@ -70,7 +57,7 @@ export function GoalTraining({ goal }: Props) {
                 {goal.trainingDuration} minutes
                 <Space />
                 {!isDone && (
-                  <button onClick={() => Actions.cancelGoalTraining()}>
+                  <button onClick={() => Actions.cancelGoalTraining(goal)}>
                     cancel
                   </button>
                 )}

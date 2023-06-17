@@ -6,6 +6,22 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  background-color: tomato;
+}
+
+a {
+  color: #090;
+}
+a:visited {
+  color: #060;
+}
+
+input,
+button,
+textarea,
+select {
+  background: #900;
+  color: white;
 }
 
 h1,

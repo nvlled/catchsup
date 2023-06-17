@@ -20,6 +20,19 @@ export function useChanged<T>(
   return changed;
 }
 
+export function useTimer(ms: number) {
+  const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCounter((counter) => counter + 1);
+    }, ms);
+    return () => clearInterval(id);
+  }, [ms]);
+
+  return counter;
+}
+
 export function classes(...cs: (string | boolean)[]) {
   return cs.filter((c) => !!c && typeof c === "string").join(" ");
 }

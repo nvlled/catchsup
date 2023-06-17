@@ -1,14 +1,16 @@
 import { StateStorage } from "zustand/middleware";
 import { api } from "./api";
 
+let dataDir: string | null = null;
+
 export const storage = {
   getData: async (key: string): Promise<string> => {
-    const filename = await api.withDataDir(key);
+    const filename = dataDir ?? (dataDir = await api.withDataDir(key));
     return await api.readFile(filename);
   },
   setData: async (key: string, data: string): Promise<void> => {
-    const filename = await api.withDataDir(key);
-    api.writeFile(filename, data);
+    const filename = dataDir ?? (dataDir = await api.withDataDir(key));
+    await api.writeFile(filename, data);
   },
 };
 

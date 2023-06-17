@@ -1,16 +1,17 @@
 
-- disable notifications when inactive
+
+- app doesn't unmount properly during dev
+  create separate instances for services
+  alternatively, await for each async to finish
+
+
+- cooldown input
 
 - open devtools with ~ key
 
 - remove windowchecker.focused
-
-- notify first once even when focused
-  when time is up
+  use win.isFocused instead
 
 - daily hour limit
 
-- create seperate branch for the neutralino version
-
-- add anytime on ScheduleType
 

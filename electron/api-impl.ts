@@ -88,4 +88,8 @@ export const apiImpl = {
     const dir = app.isPackaged ? app.getPath("userData") : ".";
     return path.resolve(path.join(dir, filename));
   },
+
+  openDevTools() {
+    mainWindow?.webContents.openDevTools();
+  },
 };
