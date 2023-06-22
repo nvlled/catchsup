@@ -1,22 +1,24 @@
 import { Actions } from "../actions";
 
-export const WindowStateChecker = {
-  start() {
-    window.addEventListener("focus", WindowStateChecker.onfocus);
-    window.addEventListener("blur", WindowStateChecker.onBlur);
-  },
-  stop() {
-    window.removeEventListener("focus", WindowStateChecker.onfocus);
-    window.removeEventListener("blur", WindowStateChecker.onBlur);
-  },
-  onBlur() {
+export function createWindowStateChecker() {
+  return { start, stop };
+
+  function start() {
+    window.addEventListener("focus", onfocus);
+    window.addEventListener("blur", onBlur);
+  }
+  function stop() {
+    window.removeEventListener("focus", onfocus);
+    window.removeEventListener("blur", onBlur);
+  }
+  function onBlur() {
     Actions.produceNextState((draft) => {
       draft.window.focused = false;
     });
-  },
-  onfocus() {
+  }
+  function onfocus() {
     Actions.produceNextState((draft) => {
       draft.window.focused = true;
     });
-  },
-};
+  }
+}

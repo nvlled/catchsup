@@ -1,14 +1,21 @@
 import { AppEvent } from "../app-event";
-import { UnixTimestamp } from "../../../shared/datetime";
+import {
+  DateNumber,
+  Minutes,
+  TimeNumber,
+  UnixTimestamp,
+} from "../../../shared/datetime";
 import { Goal, GoalID } from "../../../shared/goal";
 import { Scheduler } from "../../../shared/scheduler";
 import { Actions } from "../actions";
 import { api } from "../api";
-import { useAppStore } from "../state";
+import { State, useAppStore } from "../state";
 import { Systray } from "../systray";
 
-export const SchedulerService = {
-  start() {
+export function createSchedulerService() {
+  return { start, stop };
+
+  function start() {
     Actions.produceNextState((draft) => {
       const { scheduler } = draft;
       if (!Scheduler.hasScheduledGoal(scheduler)) {
@@ -17,12 +24,180 @@ export const SchedulerService = {
           draft.goals
         );
       }
-      Systray.setIcon(draft.scheduler.goal ? "due-now" : "blank");
+      updateSystrayIcon(draft);
+
+      draft.scheduler.intervalID = setInterval(onUpdate, 5 * 1000);
+      AppEvent.on("settings-updated", onSettingsUpdated);
+      AppEvent.on("goal-started", onGoalStarted);
+      AppEvent.on("goal-finished", onGoalFinished);
+      AppEvent.on("goal-modified", onGoalModified);
+      AppEvent.on("goal-cancelled", onGoalCancelled);
+      AppEvent.on("goal-timeup", onGoalTimeUp);
+    });
+  }
+
+  function stop() {
+    const { scheduler } = useAppStore.getState();
+    clearInterval(scheduler.intervalID);
+    AppEvent.off("settings-updated", onSettingsUpdated);
+    AppEvent.off("goal-started", onGoalStarted);
+    AppEvent.off("goal-finished", onGoalFinished);
+    AppEvent.off("goal-modified", onGoalModified);
+    AppEvent.off("goal-cancelled", onGoalCancelled);
+    AppEvent.off("goal-timeup", onGoalTimeUp);
+  }
+
+  function onSettingsUpdated() {
+    const state = useAppStore.getState();
+    updateSystrayIcon(state);
+  }
+
+  function onUpdate() {
+    Actions.produceNextState((draft) => {
+      const { scheduler, window, screen, activeTraining } = draft;
+      if (
+        !activeTraining?.startTime &&
+        !Scheduler.hasScheduledGoal(scheduler)
+      ) {
+        scheduler.goal = Scheduler.findNextSchedule(
+          draft.scheduler,
+          draft.goals
+        );
+        updateSystrayIcon(draft);
+      }
+
+      if (UnixTimestamp.since(scheduler.lastNotify) > 2 * 60) {
+        api.requestWindowAttention(false);
+      }
+
+      const notify =
+        !window.focused &&
+        !screen.locked &&
+        !screen.suspended &&
+        !activeTraining?.startTime &&
+        !Scheduler.isNoDisturbMode(scheduler) &&
+        draft.lastCompleted != DateNumber.current() &&
+        Scheduler.hasScheduledGoal(scheduler);
+
+      if (notify && Scheduler.canNotifyStart(scheduler)) {
+        const { goals } = draft;
+        const goalID = scheduler.goal?.id;
+        const goal = goals.find((g) => g.id === goalID);
+        if (!goal) {
+          console.log("unknown goal ID", goalID);
+          api.showNotification("hey", "uh, hello");
+        } else {
+          Scheduler.updateNotificationData(scheduler);
+          api.showNotification(goal.title, goal.desc.slice(0, 100) ?? "hey");
+          api.requestWindowAttention(true);
+          api.setWindowTitle(goal.title);
+          Actions.playShortPromptSound();
+
+          scheduler.scheduleInterval = Scheduler.getNextInterval(draft.goals);
+        }
+      }
+
+      if (activeTraining?.startTime && activeTraining.timeUp) {
+        const elapsed = UnixTimestamp.since(activeTraining.timeUp);
+        const cooldownOver =
+          elapsed / 60 > (activeTraining.cooldownDuration ?? 5);
+
+        if (cooldownOver && Scheduler.canNotifyStop(scheduler)) {
+          Scheduler.updateNotificationData(scheduler);
+          notifyStop();
+        }
+      }
+    });
+  }
+
+  function onGoalStarted(id: GoalID) {
+    Systray.setIcon("ongoing");
+    Actions.produceNextState((draft) => {
+      Scheduler.updateNotificationData(draft.scheduler);
+      api.setWindowTitle(draft.goals.find((g) => g.id === id)?.title);
+    });
+  }
+
+  function onGoalTimeUp(_: GoalID) {
+    notifyStop();
+  }
+
+  function onGoalFinished(_goalID: GoalID) {
+    Actions.produceNextState((draft) => {
+      const { scheduler } = draft;
+
+      scheduler.notificationCount = 0;
+      scheduler.lastComplete = UnixTimestamp.current();
+      scheduler.lastGoalID = scheduler.goal?.id ?? null;
+      scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
+      api.setWindowTitle("");
+      updateSystrayIcon(draft);
+    });
+  }
+
+  function onGoalModified(goalID: GoalID) {
+    Actions.produceNextState((draft) => {
+      const { scheduler } = draft;
+      const goal = draft.goals.find((g) => g.id === goalID);
+      const stillDue =
+        goal && scheduler.goal?.id === goalID && Goal.isDueNow(goal);
+
+      if (!stillDue || !Scheduler.hasScheduledGoal(scheduler)) {
+        scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
+        updateSystrayIcon(draft);
+      }
+    });
+  }
+
+  function onGoalCancelled(goalID: GoalID) {
+    const state = useAppStore.getState();
+    const { scheduler } = state;
+    if (goalID === scheduler?.goal?.id) {
+      updateSystrayIcon(state);
+    }
+  }
+
+  function notifyStop() {
+    Systray.setIcon("time-up");
+    api.showNotification("time's up", "stop now");
+    api.requestWindowAttention(true);
+    Actions.playShortRewardSound();
+  }
+
+  function updateSystrayIcon(state: State) {
+    const { scheduler, activeTraining, lastCompleted } = state;
+    if (activeTraining?.startTime) {
+      Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");
+    } else {
+      Systray.setIcon(
+        scheduler.goal &&
+          !Scheduler.isNoDisturbMode(scheduler) &&
+          lastCompleted != DateNumber.current()
+          ? "due-now"
+          : "blank"
+      );
+    }
+  }
+}
+
+/*
+export const SchedulerService = {
+  start() {
+    Actions.produceNextState((draft) => {
+      const { scheduler, activeTraining } = draft;
+      if (!Scheduler.hasScheduledGoal(scheduler)) {
+        draft.scheduler.goal = Scheduler.findNextSchedule(
+          draft.scheduler,
+          draft.goals
+        );
+      }
+      SchedulerService.updateSystrayIcon(scheduler, activeTraining);
 
       draft.scheduler.intervalID = setInterval(
         SchedulerService.onUpdate,
-        10 * 1000
+        5 * 1000
       );
+      AppEvent.on("settings-updated", SchedulerService.onSettingsUpdated);
       AppEvent.on("goal-started", SchedulerService.onGoalStarted);
       AppEvent.on("goal-finished", SchedulerService.onGoalFinished);
       AppEvent.on("goal-modified", SchedulerService.onGoalModified);
@@ -33,6 +208,7 @@ export const SchedulerService = {
   stop() {
     const { scheduler } = useAppStore.getState();
     clearInterval(scheduler.intervalID);
+    AppEvent.off("settings-updated", SchedulerService.onSettingsUpdated);
     AppEvent.off("goal-started", SchedulerService.onGoalStarted);
     AppEvent.off("goal-finished", SchedulerService.onGoalFinished);
     AppEvent.off("goal-modified", SchedulerService.onGoalModified);
@@ -40,42 +216,39 @@ export const SchedulerService = {
     AppEvent.off("goal-timeup", SchedulerService.onGoalTimeUp);
   },
 
+  onSettingsUpdated() {
+    const { scheduler, activeTraining } = useAppStore.getState();
+    SchedulerService.updateSystrayIcon(scheduler, activeTraining);
+  },
+
   onUpdate() {
     Actions.produceNextState((draft) => {
       const { scheduler, window, screen, activeTraining } = draft;
-      if (!Scheduler.hasScheduledGoal(scheduler)) {
+      if (
+        !activeTraining?.startTime &&
+        !Scheduler.hasScheduledGoal(scheduler)
+      ) {
         scheduler.goal = Scheduler.findNextSchedule(
           draft.scheduler,
           draft.goals
         );
-        Systray.setIcon(scheduler.goal ? "due-now" : "blank");
+        SchedulerService.updateSystrayIcon(scheduler, activeTraining);
       }
 
-      //console.log(
-      //  "scheduler check for notification\n",
-      //  "!focused",
-      //  !window.focused,
-      //  "!locked",
-      //  !screen.locked,
-      //  "!suspended",
-      //  !screen.suspended,
-      //  "!activeTraining",
-      //  !activeTraining?.startTime,
-      //  "has scheduled yet",
-      //  Scheduler.hasScheduledGoal(scheduler),
-      //  "can notify",
-      //  Scheduler.canNotifyStart(scheduler)
-      //);
+      if (UnixTimestamp.since(scheduler.lastNotify) > 2 * 60) {
+        api.requestWindowAttention(false);
+      }
 
-      // notify start
-      if (
+      const notify =
         !window.focused &&
         !screen.locked &&
         !screen.suspended &&
         !activeTraining?.startTime &&
-        Scheduler.hasScheduledGoal(scheduler) &&
-        Scheduler.canNotifyStart(scheduler)
-      ) {
+        draft.lastCompleted != DateNumber.current() &&
+        !Scheduler.isNoDisturbMode(scheduler) &&
+        Scheduler.hasScheduledGoal(scheduler);
+
+      if (notify && Scheduler.canNotifyStart(scheduler)) {
         const { goals } = draft;
         const goalID = scheduler.goal?.id;
         const goal = goals.find((g) => g.id === goalID);
@@ -83,31 +256,32 @@ export const SchedulerService = {
           console.log("unknown goal ID", goalID);
           api.showNotification("hey", "uh, hello");
         } else {
-          scheduler.lastNotify = UnixTimestamp.current();
+          Scheduler.updateNotificationData(scheduler);
           api.showNotification(goal.title, goal.desc.slice(0, 100) ?? "hey");
           api.requestWindowAttention(true);
+          api.setWindowTitle(goal.title);
           Actions.playShortPromptSound();
         }
       }
 
-      if (activeTraining?.goalID && activeTraining.timeUp) {
+      if (activeTraining?.startTime && activeTraining.timeUp) {
         const elapsed = UnixTimestamp.since(activeTraining.timeUp);
         const cooldownOver =
-          elapsed / 60 > (activeTraining.cooldownDuration ?? 2);
-        console.log({ elapsed, cooldownOver });
+          elapsed / 60 > (activeTraining.cooldownDuration ?? 5);
 
         if (cooldownOver && Scheduler.canNotifyStop(scheduler)) {
-          scheduler.lastNotify = UnixTimestamp.current();
+          Scheduler.updateNotificationData(scheduler);
           SchedulerService.notifyStop();
         }
       }
     });
   },
 
-  onGoalStarted(_: GoalID) {
+  onGoalStarted(id: GoalID) {
     Systray.setIcon("ongoing");
     Actions.produceNextState((draft) => {
-      draft.scheduler.lastNotify = UnixTimestamp.current();
+      Scheduler.updateNotificationData(draft.scheduler);
+      api.setWindowTitle(draft.goals.find((g) => g.id === id)?.title);
     });
   },
 
@@ -115,39 +289,38 @@ export const SchedulerService = {
     SchedulerService.notifyStop();
   },
 
-  onGoalFinished(goalID: GoalID) {
+  onGoalFinished(_goalID: GoalID) {
     Actions.produceNextState((draft) => {
-      const { scheduler } = draft;
-      if (scheduler.goal?.id !== goalID) return;
+      const { scheduler, activeTraining } = draft;
 
+      scheduler.notificationCount = 0;
       scheduler.lastComplete = UnixTimestamp.current();
-      scheduler.lastGoalID = scheduler.goal.id;
+      scheduler.lastGoalID = scheduler.goal?.id ?? null;
       scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
-      console.log("goal finished, next goal", scheduler.goal);
-      Systray.setIcon(scheduler.goal ? "due-now" : "blank");
+      api.setWindowTitle("");
+      SchedulerService.updateSystrayIcon(scheduler, activeTraining);
     });
   },
 
   onGoalModified(goalID: GoalID) {
-    console.log("goal modified", goalID);
     Actions.produceNextState((draft) => {
-      const { scheduler } = draft;
+      const { scheduler, activeTraining } = draft;
       const goal = draft.goals.find((g) => g.id === goalID);
       const stillDue =
         goal && scheduler.goal?.id === goalID && Goal.isDueNow(goal);
 
       if (!stillDue || !Scheduler.hasScheduledGoal(scheduler)) {
         scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
-        Systray.setIcon(draft.scheduler.goal ? "due-now" : "blank");
+        SchedulerService.updateSystrayIcon(scheduler, activeTraining);
       }
     });
   },
 
-  onGoalCancelled(goalID: GoalID) {
-    const { scheduler } = useAppStore.getState();
-    if (scheduler.goal?.id === goalID) {
-      Systray.setIcon(scheduler.goal ? "due-now" : "blank");
-    }
+  onGoalCancelled(_goalID: GoalID) {
+    const { scheduler, activeTraining } = useAppStore.getState();
+    //if (goalID === scheduler?.goal?.id) {
+    SchedulerService.updateSystrayIcon(scheduler, activeTraining);
+    //}
   },
 
   notifyStop() {
@@ -156,4 +329,17 @@ export const SchedulerService = {
     api.requestWindowAttention(true);
     Actions.playShortRewardSound();
   },
+
+  updateSystrayIcon(scheduler: Scheduler, activeTraining: ActiveTraining) {
+    if (activeTraining?.startTime) {
+      Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");
+    } else {
+      Systray.setIcon(
+        scheduler.goal && !Scheduler.isNoDisturbMode(scheduler)
+          ? "due-now"
+          : "blank"
+      );
+    }
+  },
 };
+*/

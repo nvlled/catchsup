@@ -16,6 +16,21 @@ export interface TrainingLog {
   notes?: string;
 }
 
+export const TrainingLog = {
+  getMinutesToday(logs: TrainingLog[]) {
+    const today = DateNumber.current();
+    return logs
+      .filter((l) => UnixTimestamp.toDateNumber(l.startTime) === today)
+      .reduce(
+        (totalMinutes: number, log: TrainingLog) => totalMinutes + log.elapsed,
+        0
+      );
+  },
+  getHoursToday(logs: TrainingLog[]) {
+    return TrainingLog.getMinutesToday(logs) / 60;
+  },
+};
+
 export type ActiveTraining = {
   goalID: GoalID;
   startTime?: UnixTimestamp;

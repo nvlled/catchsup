@@ -1,17 +1,50 @@
 
 
-- app doesn't unmount properly during dev
-  create separate instances for services
-  alternatively, await for each async to finish
+  - click on log to show logs for today
+    - add date filter too 
+    - add edit log while I'm at it
+
+- one more final fixes and simple polishes  
+  - rename cooldown to overtime/extension
+  - remove "reschedule for today"
+  - put duration and cooldown input on one line
+  - add WIP note on about page
+  - update about page
+  - hide spacing features for now,
+    since I don't use them that much anyway
+    and I havent tested them much
 
 
-- cooldown input
 
-- open devtools with ~ key
 
-- remove windowchecker.focused
-  use win.isFocused instead
+- show reward when limit has been passed
+  - drag & drop files (or manually open) for reward
+  - keep track of files already shown
 
-- daily hour limit
+
+- better UI for day selection
+
+ Weekdays
+    Mon /
+    Tue    
+    Wed  
+    Thu  
+    Fri
+    Sat
+    Sun
+
+  Month days
+    [/]1   [x]2  [ ]3   [ ]4  [ ]5    [ ]6  [ ]7
+    [ ]8   [ ]9  [ ]10  [ ]11 [ ]12   [ ]13  [ ]14
+    ...
+
+Operation is commutative
+A B    D
+/ x = x
+/   = /
+/ / = /
+    = x
+
+Example: If Tue happens to be 2, consider not due on that day
 
 

@@ -70,9 +70,6 @@ export default function GoalView({ goal }: Props) {
           <br />
         </>
       )}
-      {goal.desc && (
-        <div dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }} />
-      )}
       <br />
       <div className="flex-center">
         <button
@@ -82,6 +79,10 @@ export default function GoalView({ goal }: Props) {
           start
         </button>
       </div>
+      <br />
+      {goal.desc && (
+        <div dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }} />
+      )}
       <br />
       {logs.length > 0 ? (
         <>

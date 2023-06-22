@@ -19,6 +19,10 @@ export function partition<T>(
 export type Action = () => void;
 
 export const ArrayUtil = {
+  randomSelect<T>(xs: T[]) {
+    const i = (Math.random() * xs.length) | 0;
+    return xs[i];
+  },
   range(from: number, to: number) {
     const result: number[] = [];
     for (let i = from; i <= to; i++) {

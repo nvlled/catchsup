@@ -1,35 +1,39 @@
 import { Actions } from "../actions";
 import { ElectronEvents } from "../api";
 
-export const ScreenChecker = {
-  start() {
-    ElectronEvents.on("lock-screen", ScreenChecker.onLock);
-    ElectronEvents.on("unlock-screen", ScreenChecker.onUnlock);
-    ElectronEvents.on("suspend", ScreenChecker.onSuspend);
-    ElectronEvents.on("resume", ScreenChecker.onResume);
-  },
-  stop() {
-    ElectronEvents.off("lock-screen", ScreenChecker.onLock);
-    ElectronEvents.off("unlock-screen", ScreenChecker.onUnlock);
-  },
-  onLock() {
+export function createScreenChecker() {
+  return { start, stop };
+
+  function start() {
+    ElectronEvents.on("lock-screen", onLock);
+    ElectronEvents.on("unlock-screen", onUnlock);
+    ElectronEvents.on("suspend", onSuspend);
+    ElectronEvents.on("resume", onResume);
+  }
+  function stop() {
+    ElectronEvents.off("lock-screen", onLock);
+    ElectronEvents.off("unlock-screen", onUnlock);
+    ElectronEvents.off("suspend", onSuspend);
+    ElectronEvents.off("resume", onResume);
+  }
+  function onLock() {
     Actions.produceNextState((draft) => {
       draft.screen.locked = true;
     });
-  },
-  onUnlock() {
+  }
+  function onUnlock() {
     Actions.produceNextState((draft) => {
       draft.screen.locked = false;
     });
-  },
-  onSuspend() {
+  }
+  function onSuspend() {
     Actions.produceNextState((draft) => {
       draft.screen.suspended = true;
     });
-  },
-  onResume() {
+  }
+  function onResume() {
     Actions.produceNextState((draft) => {
       draft.screen.suspended = false;
     });
-  },
-};
+  }
+}

@@ -1,32 +1,35 @@
-import { ActiveTrainingChecker } from "./active-training-checker";
-import { SchedulerService } from "./scheduler-service";
-import { ScreenChecker } from "./screen-checker";
-import { WindowStateChecker } from "./window-checker";
+import { createActiveTrainingChecker } from "./active-training-checker";
+import { createSchedulerService } from "./scheduler-service";
+import { createScreenChecker } from "./screen-checker";
+import { createWindowStateChecker } from "./window-checker";
 
 interface Service {
-  start(): void;
-  stop(): void;
+  start(): Promise<void> | void;
+  stop(): Promise<void> | void;
 }
 
-const services: Service[] = [
-  WindowStateChecker,
-  ActiveTrainingChecker,
-  ScreenChecker,
-  SchedulerService,
-];
+export function createServices() {
+  const services: Service[] = [
+    createWindowStateChecker(),
+    createActiveTrainingChecker(),
+    createScreenChecker(),
+    createSchedulerService(),
+  ];
 
-export const Services = {
-  startAll() {
-    console.log("starting services");
-    for (const s of services) {
-      s.start();
-    }
-  },
+  return {
+    async startAll() {
+      console.log("starting services");
+      for (const s of services) {
+        await s.start();
+      }
+    },
 
-  stopAll() {
-    console.log("stopping services");
-    for (const s of services) {
-      s.stop();
-    }
-  },
-};
+    async stopAll() {
+      console.log("stopping services");
+      for (const s of services) {
+        console.log(">", s);
+        await s.stop();
+      }
+    },
+  };
+}

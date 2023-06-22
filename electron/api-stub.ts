@@ -35,6 +35,8 @@ export const apiStub = {
   >,
 
   openDevTools: identityFn as PromisedReturn<typeof apiImpl.openDevTools>,
+
+  setWindowTitle: identityFn as PromisedReturn<typeof apiImpl.setWindowTitle>,
 } as const;
 
 export type API = typeof apiStub;

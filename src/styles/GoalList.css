@@ -22,7 +22,7 @@
   align-items: center;
 }
 .goal-list-entry.disabled {
-  color: gray;
+  color: #422;
 }
 
 .goal-list-entry:hover {

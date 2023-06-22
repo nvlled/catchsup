@@ -346,6 +346,7 @@ export function TimeSchedEditor({ goal, onChange }: SubProps) {
       : "early morning";
 
   const options: Label[] = [
+    "auto",
     "early morning",
     "late morning",
     "early afternoon",
@@ -418,12 +419,23 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
 
   return (
     <div>
+      duration:{" "}
       <input
         type="number"
         value={goal.trainingDuration}
         min={5}
         max={60 * 8}
         onChange={handleDurationChange}
+      />{" "}
+      minutes
+      <br />
+      cooldown:
+      <input
+        type="number"
+        value={goal.cooldownDuration ?? 0}
+        min={0}
+        max={goal.trainingDuration ?? 1}
+        onChange={handleCooldownChange}
       />{" "}
       minutes
       <br />
@@ -462,6 +474,9 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
 
   function handleDurationChange(e: ChangeEvent<HTMLInputElement>) {
     produceChange((draft) => (draft.trainingDuration = e.target.valueAsNumber));
+  }
+  function handleCooldownChange(e: ChangeEvent<HTMLInputElement>) {
+    produceChange((draft) => (draft.cooldownDuration = e.target.valueAsNumber));
   }
 
   function handleChangeMinInterval(e: ChangeEvent<HTMLInputElement>): void {

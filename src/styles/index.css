@@ -6,7 +6,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  background-color: tomato;
+  background-color: #ff4125;
 }
 
 a {
@@ -39,7 +39,7 @@ body {
   margin: 0;
   min-width: 320px;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0 auto !important;
 }
 
 input[type="checkbox"] {

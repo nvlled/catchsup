@@ -92,4 +92,9 @@ export const apiImpl = {
   openDevTools() {
     mainWindow?.webContents.openDevTools();
   },
+
+  setWindowTitle(title?: string) {
+    if (mainWindow)
+      mainWindow.title = !title ? app.name : title + " - " + app.name;
+  },
 };

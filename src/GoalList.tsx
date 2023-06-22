@@ -6,14 +6,22 @@ import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
 
 import { getRandomQuote } from "./quotes";
-import { call, partition } from "./lib/jsext";
+import { ArrayUtil, call, partition } from "./lib/jsext";
+import { Actions } from "./lib/actions";
+import { DateNumber, UnixTimestamp } from "../shared/datetime";
 
 interface Props {
   goals: Goal[];
+  dueOnly?: boolean;
 }
 
 export default function GoalList({ goals }: Props) {
-  const scheduler = useAppStore((state) => state.scheduler);
+  const [lastCompleted, scheduler, hideGoalList] = useAppStore((state) => [
+    state.lastCompleted,
+    state.scheduler,
+    state.goalList.hideGoalList,
+  ]);
+  const doneToday = lastCompleted === DateNumber.current();
   const [quote, setQuote] = useState(getRandomQuote());
   const dueStates = Goal.getDueStates(goals);
 
@@ -25,7 +33,7 @@ export default function GoalList({ goals }: Props) {
 
   const sortedGoals = call(() => {
     const [otherGoals, disabledGoals] = partition(
-      goals,
+      hideGoalList ? [] : goals,
       (g) => g.schedulingType !== "disabled"
     );
     return otherGoals.concat(disabledGoals);
@@ -34,18 +42,27 @@ export default function GoalList({ goals }: Props) {
   const goalID = scheduler.goal?.id;
   const dueGoal = !goalID ? undefined : goals.find((g) => g.id === goalID);
 
+  const minutesUntilNextGoal =
+    scheduler.scheduleInterval -
+    UnixTimestamp.since(scheduler.lastComplete) / 60;
+
   return (
     <div className="goal-list">
-      {dueGoal && (
-        <div>
+      {doneToday ? (
+        <div className="flex-center">
+          <h1>You've done enough for today. Well done.</h1>
+        </div>
+      ) : dueGoal ? (
+        <div className="flex-center">
           <h1
             className="goal-list-due-goal"
             onClick={() => handleOpen(dueGoal)}
           >
-            <a href="#">{dueGoal.title}</a>
+            <a href="#">*{dueGoal.title}</a>
           </h1>
+          <Space count={5} />
         </div>
-      )}
+      ) : null}
       <br />
       <div
         className="goal-list-quote"
@@ -54,9 +71,20 @@ export default function GoalList({ goals }: Props) {
       >
         {quote.text}
       </div>
+      {!scheduler.goal && (
+        <small>
+          time to wait until next goal: {minutesUntilNextGoal.toFixed(2)}mins
+        </small>
+      )}
       <br />
-
-      <ul>
+      <div className="flex-left">
+        <button onClick={handleRandomSelect}>random goal</button>
+        <Space count={5} />
+        <a href="#" onClick={handleToggleShowAll}>
+          {hideGoalList ? "show list" : "hide"}
+        </a>
+      </div>
+      <ul className="goal-list-entries">
         {sortedGoals.map((e) => (
           <li
             key={e.id}
@@ -104,6 +132,21 @@ export default function GoalList({ goals }: Props) {
       </ul>
     </div>
   );
+
+  function handleToggleShowAll() {
+    Actions.toggleGoalList();
+  }
+
+  function handleRandomSelect() {
+    const dueGoals = goals.filter((g) => {
+      const state = Goal.checkDue(g);
+      return state === "due-now" || state === "was-due";
+    });
+    const goal = ArrayUtil.randomSelect(dueGoals);
+    if (goal) {
+      handleOpen(goal);
+    }
+  }
 
   function handleOpen(goal: Goal) {
     useAppStore.setState({

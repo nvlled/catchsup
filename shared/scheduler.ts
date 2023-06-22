@@ -1,6 +1,6 @@
-import { partition } from "../src/lib/jsext";
-import { DateNumber, TrainingTime, UnixTimestamp } from "./datetime";
+import { Minutes, TimeNumber, TrainingTime, UnixTimestamp } from "./datetime";
 import { Goal, GoalID } from "./goal";
+import { Rules } from "./rules";
 
 export interface ScheduledGoal {
   id: GoalID;
@@ -12,13 +12,15 @@ export interface Scheduler {
 
   intervalID: NodeJS.Timer | undefined;
 
+  noDisturbUntil: UnixTimestamp | null;
   lastComplete: UnixTimestamp | null;
   lastNotify: UnixTimestamp | null;
   lastGoalID: GoalID | null;
+  notificationCount: number;
+  scheduleInterval: Minutes;
 
   options: {
-    maxSessionhours: number;
-    scheduleIntervalMinutes: number;
+    dailyLimit: Minutes;
   };
 }
 
@@ -29,13 +31,15 @@ export const Scheduler = {
 
       intervalID: undefined,
 
+      noDisturbUntil: null,
       lastGoalID: null,
       lastNotify: null,
       lastComplete: null,
+      notificationCount: 0,
+      scheduleInterval: 30 as Minutes,
 
       options: {
-        maxSessionhours: 2,
-        scheduleIntervalMinutes: 1,
+        dailyLimit: Rules.defaults.dailyLimit,
       },
     };
     return scheduler;
@@ -44,8 +48,7 @@ export const Scheduler = {
   canScheduleNext(scheduler: Scheduler) {
     const secondsElapsed =
       UnixTimestamp.current() - (scheduler.lastComplete ?? 0);
-    const intervalPassed =
-      secondsElapsed / 60 >= scheduler.options.scheduleIntervalMinutes;
+    const intervalPassed = secondsElapsed / 60 >= scheduler.scheduleInterval;
 
     return intervalPassed;
   },
@@ -55,15 +58,18 @@ export const Scheduler = {
   },
 
   canNotifyStart(scheduler: Scheduler): boolean {
-    const [min, max] = [20, 15 * 60];
-    const h = 60 * 60;
+    const [min, max] = [5, 15 * 60];
+    const h = 10;
 
     const { goal } = scheduler;
     if (!goal) return false;
 
-    const elapsed = Math.min(UnixTimestamp.since(goal.scheduledOn), h);
+    //const elapsed = Math.min(UnixTimestamp.since(goal.scheduledOn), h);
+    const count = scheduler.notificationCount;
     // Make notifications more frequent as more time elapses
-    const interval = min + (1 - elapsed / h) * (max - min);
+    //const interval = min + (1 - elapsed / h) * (max - min);
+    const interval = min + (1 - count / h) * (max - min);
+    console.log({ count, interval });
 
     if (UnixTimestamp.since(scheduler.lastNotify) < interval) {
       return false;
@@ -72,12 +78,17 @@ export const Scheduler = {
     return true;
   },
 
+  updateNotificationData(scheduler: Scheduler) {
+    scheduler.lastNotify = UnixTimestamp.current();
+    scheduler.notificationCount++;
+
+    if (scheduler.notificationCount > 30) {
+      scheduler.notificationCount = 0;
+    }
+  },
+
   hasScheduledGoal(scheduler: Scheduler) {
-    return (
-      scheduler.goal &&
-      UnixTimestamp.toDateNumber(scheduler.goal.scheduledOn) ==
-        DateNumber.current()
-    );
+    return scheduler.goal && UnixTimestamp.sameDay(scheduler.goal.scheduledOn);
   },
 
   findNextSchedule(scheduler: Scheduler, goals: Goal[]): ScheduledGoal | null {
@@ -85,32 +96,65 @@ export const Scheduler = {
       return null;
     }
 
-    const dueGoals = goals.filter(Goal.isDue);
-    if (dueGoals.length === 0) {
+    const dueNow: Goal[] = [];
+    const wasDue: Goal[] = [];
+    const auto: Goal[] = [];
+    let dueCount = 0;
+
+    for (const g of goals) {
+      const s = Goal.checkDue(g);
+      if (!["due-now", "was-due"].includes(s)) continue;
+
+      dueCount++;
+      (g.trainingTime === "auto"
+        ? auto
+        : s === "due-now"
+        ? dueNow
+        : wasDue
+      ).push(g);
+    }
+
+    if (dueCount === 0) {
       return null;
     }
 
-    const [fixedTime, anyTime] = partition(
-      dueGoals,
-      (g) => g.trainingTime !== "auto"
-    );
-
     let goalID: GoalID = 0;
-    if (fixedTime.length > 0) {
-      fixedTime.sort((a, b) => {
+
+    if (dueNow.length > 0) {
+      dueNow.sort((a, b) => {
         const durA = TrainingTime.getDuration(a.trainingTime);
         const durB = TrainingTime.getDuration(b.trainingTime);
         return durA - durB;
       });
-      goalID = fixedTime[0]?.id ?? null;
+      goalID = dueNow[0]?.id ?? null;
+    } else if (wasDue.length > 0) {
+      wasDue.sort((a, b) => {
+        const [startTimeA] = TrainingTime.getTimeRange(a.trainingTime);
+        const [startTimeB] = TrainingTime.getTimeRange(b.trainingTime);
+        return startTimeA - startTimeB;
+      });
+      goalID = wasDue[0]?.id ?? null;
     } else {
-      anyTime.sort((a, b) => a.updatedTime - b.updatedTime);
-      goalID = anyTime[0]?.id ?? null;
+      auto.sort((a, b) => a.updatedTime - b.updatedTime);
+      goalID = auto[0]?.id ?? null;
     }
 
     return {
       id: goalID,
       scheduledOn: UnixTimestamp.current(),
     };
+  },
+
+  isNoDisturbMode({ noDisturbUntil }: Scheduler) {
+    return (noDisturbUntil ?? 0) > UnixTimestamp.current();
+  },
+
+  getNextInterval(goals: Goal[]): Minutes {
+    const remainingMinutes = TimeNumber.getDuration(
+      2359 as TimeNumber,
+      TimeNumber.current()
+    );
+    const dueCount = goals.filter(Goal.isDueToday).length;
+    return (remainingMinutes / dueCount) as Minutes;
   },
 };

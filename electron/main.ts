@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import path from "node:path";
 import { apiImpl, getPublicPath } from "./api-impl";
 import { IdentityFn } from "../shared";
@@ -53,7 +53,6 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
-    //icon: getPublicPath() + "/icons/icon.png",
   });
 
   mainWindow.setIcon(getPublicPath() + "/icons/icon.png");
@@ -76,7 +75,15 @@ function createWindow() {
   } else {
     // win.loadFile('dist/index.html')
     mainWindow.loadFile(path.join(process.env.DIST, "index.html"));
+    mainWindow.setMaximumSize(640, 0);
   }
+
+  //globalShortcut.register("Y", () => {
+  //  // aha this works
+  //  // I can listen for any keypress!!?11
+  //  // haha I can't press wai animore
+  //  console.log("y pressed");
+  //});
 }
 
 function initStorage() {

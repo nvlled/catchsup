@@ -4,10 +4,13 @@ import { Actions } from "../actions";
 import { AppEvent } from "../app-event";
 import { useAppStore } from "../state";
 
-export const ActiveTrainingChecker = {
-  intervalID: undefined as NodeJS.Timer | undefined,
-  start() {
-    clearInterval(ActiveTrainingChecker.intervalID);
+export function createActiveTrainingChecker() {
+  let intervalID: NodeJS.Timer | undefined;
+
+  return { start, stop };
+
+  function start() {
+    clearInterval(intervalID);
 
     const { activeTraining } = useAppStore.getState();
     const expiredTraining =
@@ -22,7 +25,7 @@ export const ActiveTrainingChecker = {
       return;
     }
 
-    ActiveTrainingChecker.intervalID = setInterval(async () => {
+    intervalID = setInterval(async () => {
       const { activeTraining, goals, window } = useAppStore.getState();
 
       if (!activeTraining?.startTime) return;
@@ -42,8 +45,9 @@ export const ActiveTrainingChecker = {
         AppEvent.dispatch("goal-timeup", activeTraining.goalID);
       }
     }, 10 * 1000);
-  },
-  stop() {
-    clearInterval(ActiveTrainingChecker.intervalID);
-  },
-};
+  }
+
+  function stop() {
+    clearInterval(intervalID);
+  }
+}

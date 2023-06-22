@@ -7,6 +7,8 @@ export type WeekDay =
   | "friday"
   | "saturday";
 
+export type Minutes = number & { __brand: "unix timestamp" };
+
 // format: YYYYMMDD -> 20230102
 export type DateNumber = number & { __brand: "date number" };
 
@@ -77,6 +79,11 @@ export const UnixTimestamp = {
     if (!t) return Infinity;
     const now = UnixTimestamp.current();
     return now - t;
+  },
+
+  sameDay(t1: UnixTimestamp, t2 = UnixTimestamp.current()) {
+    const [d1, d2] = [t1, t2].map(UnixTimestamp.toDateNumber);
+    return d1 === d2;
   },
 };
 
@@ -164,6 +171,17 @@ export const TimeNumber = {
 
     const d = new Date(0, 0, 0, hours + addHours, minutes + addMin);
     return TimeNumber.fromDate(d);
+  },
+
+  getMinutes(time: TimeNumber): Minutes {
+    const [h, m] = TimeNumber.deconstruct(time);
+    return (h * 60 + m) as Minutes;
+  },
+
+  getDuration(laterTime: TimeNumber, earlierTime: TimeNumber): Minutes {
+    const laterMinutes = TimeNumber.getMinutes(laterTime);
+    const earleirMinutes = TimeNumber.getMinutes(earlierTime);
+    return (laterMinutes - earleirMinutes) as Minutes;
   },
 };
 

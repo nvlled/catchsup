@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Goal, GoalID, TrainingLog, ActiveTraining } from "../../shared/goal";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { NeuStorage } from "./storage";
-import { UnixTimestamp } from "../../shared/datetime";
+import { DateNumber } from "../../shared/datetime";
 import { storageName } from "../../shared";
 import { Scheduler } from "../../shared/scheduler";
 
@@ -16,7 +16,6 @@ export type AppPage =
 
 interface TransientState {
   page: AppPage;
-  scheduler: Scheduler;
 
   window: {
     focused: boolean;
@@ -25,29 +24,32 @@ interface TransientState {
     locked: boolean;
     suspended: boolean;
   };
+  goalList: {
+    hideGoalList?: boolean;
+  };
 }
 interface PersistentState {
   activeTraining: ActiveTraining;
-  // TODO: remove
-  lastNotification: UnixTimestamp | null;
-  lastGoalFinish: UnixTimestamp | null;
 
   goals: Goal[];
   trainingLogs: TrainingLog[];
   nextGoalID: GoalID;
+  lastCompleted: DateNumber | null | undefined;
+
+  scheduler: Scheduler;
 }
 
 export type State = TransientState & PersistentState;
 
 export const useAppStore = create<State>()(
   persist(
-    () =>
-      ({
+    () => {
+      const state: State = {
         page: "home",
         activeTraining: null,
-        lastNotification: null,
-        lastGoalFinish: null,
         scheduler: Scheduler.create(),
+        goalList: { hideGoalList: true },
+        lastCompleted: null,
 
         window: { focused: false },
         screen: { locked: false, suspended: false },
@@ -55,7 +57,9 @@ export const useAppStore = create<State>()(
         goals: [],
         trainingLogs: [],
         nextGoalID: 1,
-      } as State),
+      };
+      return state;
+    },
     {
       name: storageName,
       storage: createJSONStorage(() => NeuStorage),
@@ -65,14 +69,22 @@ export const useAppStore = create<State>()(
           goals: state.goals,
           trainingLogs: state.trainingLogs,
           nextGoalID: state.nextGoalID,
-          lastNotification: state.lastNotification,
-          lastGoalFinish: state.lastGoalFinish,
+          lastCompleted: state.lastCompleted,
+          scheduler: state.scheduler,
         };
         return s;
       },
     }
   )
 );
+
+export function ensureValidState(state: State) {
+  if (!state.scheduler) {
+    state.scheduler = Scheduler.create();
+  }
+
+  return state;
+}
 
 export function parseState(obj: unknown): obj is State {
   if (!obj) return false;

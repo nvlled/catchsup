@@ -7,8 +7,10 @@ export type AppEvent =
   | "goal-modified"
   | "goal-finished"
   | "goal-cancelled"
+  | "settings-updated"
   | "sample-event";
 
+export type Handler = () => void;
 export type GoalHandler = (goalID: GoalID) => void;
 export type SampleEventHandler = (arg: number, x: string) => void;
 
@@ -17,6 +19,7 @@ export interface AppDispatcher {
 }
 
 function on(eventName: "sample-event", handler: SampleEventHandler): void;
+function on(eventName: "settings-updated", handler: Handler): void;
 function on(eventName: AppEvent, handler: GoalHandler): void;
 function on(eventName: string, handler: IdentityFn): void {
   if (!defaultDispatcher.handlers.has(eventName)) {
@@ -44,6 +47,10 @@ const off: typeof on = function (
   }
 };
 
+function dispatch(
+  eventName: "settings-updated",
+  ...args: Parameters<Handler>
+): void;
 function dispatch(eventName: AppEvent, ...args: Parameters<GoalHandler>): void;
 function dispatch(
   eventName: "sample-event",

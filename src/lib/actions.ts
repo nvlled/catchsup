@@ -1,13 +1,18 @@
 import { produce } from "immer";
 import { storageName } from "../../shared";
-import { UnixTimestamp } from "../../shared/datetime";
-import { Goal } from "../../shared/goal";
+import { DateNumber, Minutes, UnixTimestamp } from "../../shared/datetime";
+import { Goal, TrainingLog } from "../../shared/goal";
 import { Scheduler } from "../../shared/scheduler";
 import { sleep } from "../common";
-import { AppPage, useAppStore, parseState, State } from "./state";
+import {
+  AppPage,
+  useAppStore,
+  parseState,
+  State,
+  ensureValidState,
+} from "./state";
 import { storage } from "./storage";
 import { Audios } from "./audios";
-import { SchedulerService } from "./services/scheduler-service";
 import { AppEvent } from "./app-event";
 
 export const Actions = {
@@ -45,7 +50,7 @@ export const Actions = {
       const str = await storage.getData(storageName);
       const obj = JSON.parse(str);
       if (!parseState(obj)) return null;
-      return obj;
+      return ensureValidState(obj);
     } catch (e) {
       console.log("failed to parse app data", e);
       return null;
@@ -136,19 +141,20 @@ export const Actions = {
 
       draft.page = "home";
       draft.activeTraining = null;
-      draft.lastGoalFinish = UnixTimestamp.current();
       draft.trainingLogs.push({
         goalID: goal.id,
         elapsed,
         startTime: activeTraining.startTime,
         notes,
       });
+      const minutes = TrainingLog.getMinutesToday(draft.trainingLogs);
+      draft.lastCompleted =
+        minutes >= draft.scheduler.options.dailyLimit
+          ? DateNumber.current()
+          : null;
     });
 
     AppEvent.dispatch("goal-finished", goal.id);
-
-    //const { goals } = useAppStore.getState();
-    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   createGoal(goal: Goal) {
@@ -182,6 +188,34 @@ export const Actions = {
       if (draft.activeTraining) {
         draft.activeTraining.timeUp = UnixTimestamp.current();
       }
+    });
+  },
+
+  toggleGoalList() {
+    Actions.produceNextState((draft) => {
+      draft.goalList.hideGoalList = !draft.goalList.hideGoalList;
+    });
+  },
+
+  setNoDisturb(time: UnixTimestamp) {
+    Actions.produceNextState((draft) => {
+      draft.scheduler.noDisturbUntil = time;
+    });
+    AppEvent.dispatch("settings-updated");
+  },
+
+  cancelNoDisturb() {
+    Actions.produceNextState((draft) => {
+      draft.scheduler.noDisturbUntil = null;
+    });
+    AppEvent.dispatch("settings-updated");
+  },
+
+  setDailyLimit(limit: Minutes) {
+    Actions.produceNextState((draft) => {
+      const minutes = TrainingLog.getMinutesToday(draft.trainingLogs);
+      draft.lastCompleted = minutes >= limit ? DateNumber.current() : null;
+      draft.scheduler.options.dailyLimit = limit;
     });
   },
 
@@ -222,6 +256,4 @@ export const Actions = {
 
     return () => sound.stop(id);
   },
-
-  scheduler: SchedulerService,
 };

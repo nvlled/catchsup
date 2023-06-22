@@ -12,37 +12,41 @@ import { GoalTraining } from "./GoalTraining";
 import { About } from "./About";
 import { SettingsView } from "./SettingsView";
 import { Space } from "./components";
-import { Services } from "./lib/services";
+import { createServices } from "./lib/services";
 import { api } from "./lib/api";
+import { Scheduler } from "../shared/scheduler";
+import { call } from "./lib/jsext";
+import { TrainingLog } from "../shared/goal";
+import { DateNumber } from "../shared/datetime";
 
-/*
-const ps = ...
-
-await ps.finish();
-    ps.push((async () => {
-      await Actions.init();
-      Services.startAll();
-    })());
-
-return () => {
-    await ps.finish()
-    console.log("unmounted");
-    ps.push(...)
+function DailyLimit() {
+  const [lastCompleted, logs, scheduler] = useAppStore((state) => [
+    state.lastCompleted,
+    state.trainingLogs,
+    state.scheduler,
+  ]);
+  return (
+    <div>
+      {TrainingLog.getMinutesToday(logs).toFixed(2)}/
+      {scheduler.options.dailyLimit.toFixed(2)}
+      {lastCompleted === DateNumber.current() && " ✓"}
+    </div>
+  );
 }
-*/
 
-let initialized = false;
+let mountID = 0;
+
 function App() {
   useOnMount(() => {
-    console.log("mounted");
+    const id = ++mountID;
+    const services = createServices();
 
-    (async () => {
-      if (!initialized) {
-        initialized = true;
-        await Actions.init();
-        Services.startAll();
-      }
-    })();
+    const mountTask = call(async () => {
+      console.log("start mount", id);
+      await Actions.init();
+      await services.startAll();
+      console.log("end mount", id);
+    });
 
     function handleTilde(e: KeyboardEvent) {
       if (e.key === "~") {
@@ -52,18 +56,23 @@ function App() {
     window.addEventListener("keypress", handleTilde);
 
     return () => {
-      console.log("unmounted");
       window.removeEventListener("keypress", handleTilde);
 
-      //Actions.deinit();
-      //Services.stopAll();
+      call(async () => {
+        await mountTask;
+        console.log("start unmount", id);
+        await Actions.deinit();
+        await services.stopAll();
+        console.log("end unmount", id);
+      });
     };
   });
 
-  const [page, goals, viewGoal] = useAppStore((state) => [
+  const [page, goals, viewGoal, scheduler] = useAppStore((state) => [
     state.page,
     state.goals,
     state.goals.find((e) => e.id === state.activeTraining?.goalID),
+    state.scheduler,
   ]);
 
   return (
@@ -71,10 +80,23 @@ function App() {
       {page === "home" ? (
         <>
           <div className="flex-between">
-            <a href="#" title="??" onClick={() => Actions.changePage("about")}>
-              <img src={"icons/icon.png"} style={{ width: "30px" }} />
-            </a>
-            <div>
+            <div className="flex-left">
+              <a
+                href="#"
+                title="??"
+                onClick={() => Actions.changePage("about")}
+              >
+                <img src={"icons/icon.png"} style={{ width: "30px" }} />
+              </a>
+              <Space />
+              <DailyLimit />
+            </div>
+            <div className="flex-right">
+              {Scheduler.isNoDisturbMode(scheduler) && (
+                <span>
+                  no disturb <Space />
+                </span>
+              )}
               <button onClick={() => Actions.changePage("settings")}>
                 settings
               </button>
