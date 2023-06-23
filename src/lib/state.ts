@@ -8,6 +8,7 @@ import { Scheduler } from "../../shared/scheduler";
 
 export type AppPage =
   | "home"
+  | "logs"
   | "create-goal"
   | "view-goal"
   | "training"

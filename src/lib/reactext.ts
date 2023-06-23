@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 export function useOnMount(fn: React.EffectCallback) {
   useEffect(() => {
     return fn();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
 

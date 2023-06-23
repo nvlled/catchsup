@@ -1,4 +1,10 @@
-import { Minutes, TimeNumber, TrainingTime, UnixTimestamp } from "./datetime";
+import {
+  Minutes,
+  Seconds,
+  TimeNumber,
+  TrainingTime,
+  UnixTimestamp,
+} from "./datetime";
 import { Goal, GoalID } from "./goal";
 import { Rules } from "./rules";
 
@@ -57,19 +63,22 @@ export const Scheduler = {
     return UnixTimestamp.since(scheduler.lastNotify) > 7;
   },
 
-  canNotifyStart(scheduler: Scheduler): boolean {
-    const [min, max] = [5, 15 * 60];
-    const h = 10;
-
-    const { goal } = scheduler;
-    if (!goal) return false;
+  getNotifyStartInterval(scheduler: Scheduler): Seconds {
+    const [minimum, maximum] = [5 as Seconds, (15 * 60) as Seconds];
+    const h = 7;
 
     //const elapsed = Math.min(UnixTimestamp.since(goal.scheduledOn), h);
     const count = scheduler.notificationCount;
     // Make notifications more frequent as more time elapses
     //const interval = min + (1 - elapsed / h) * (max - min);
-    const interval = min + (1 - count / h) * (max - min);
-    console.log({ count, interval });
+    return (minimum + (1 - count / h) * (maximum - minimum)) as Seconds;
+  },
+
+  canNotifyStart(scheduler: Scheduler): boolean {
+    const interval = Scheduler.getNotifyStartInterval(scheduler);
+
+    const { goal } = scheduler;
+    if (!goal) return false;
 
     if (UnixTimestamp.since(scheduler.lastNotify) < interval) {
       return false;
@@ -82,7 +91,7 @@ export const Scheduler = {
     scheduler.lastNotify = UnixTimestamp.current();
     scheduler.notificationCount++;
 
-    if (scheduler.notificationCount > 30) {
+    if (scheduler.notificationCount > 25) {
       scheduler.notificationCount = 0;
     }
   },
@@ -149,7 +158,7 @@ export const Scheduler = {
     return (noDisturbUntil ?? 0) > UnixTimestamp.current();
   },
 
-  getNextInterval(goals: Goal[]): Minutes {
+  getNextScheduleInterval(goals: Goal[]): Minutes {
     const remainingMinutes = TimeNumber.getDuration(
       2359 as TimeNumber,
       TimeNumber.current()

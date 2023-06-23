@@ -24,6 +24,12 @@ select {
   color: white;
 }
 
+hr {
+  border: 0px dotted green;
+  border-top: 3px dotted #c50;
+  border-radius: 5px;
+}
+
 h1,
 h2,
 h3,
@@ -33,6 +39,9 @@ h6,
 h7 {
   margin: 0;
   padding: 0;
+}
+h1 {
+  color: #060;
 }
 
 body {

@@ -74,7 +74,7 @@ export interface Goal {
   };
 
   trainingDuration: number; // minutes
-  cooldownDuration: number | undefined;
+  overtime: number | undefined;
 
   durationOptions: {
     autoAdjust: boolean;
@@ -136,7 +136,7 @@ export const Goal = {
       trainingTime: "auto",
 
       trainingDuration: 15,
-      cooldownDuration: undefined,
+      overtime: undefined,
 
       durationOptions: {
         autoAdjust: false,
@@ -486,6 +486,8 @@ export const Goal = {
         }
         return "month dates: [" + days.join("|") + "]";
       }
+      case "disabled":
+        return "not active";
     }
   },
 };

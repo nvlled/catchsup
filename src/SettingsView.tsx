@@ -27,10 +27,15 @@ export function SettingsView() {
     });
   });
 
+  const secondsUntilNextNotif =
+    Scheduler.getNotifyStartInterval(scheduler) -
+    UnixTimestamp.since(scheduler.lastNotify);
+
   return (
     <div>
+      <small>next notification in {secondsUntilNextNotif}secs</small>
       <div className="flex-right">
-        <button onClick={() => Actions.changePage("home")}>back</button>
+        <button onClick={() => Actions.changePage("home")}>← back</button>
       </div>
       <div className="no-disturb">
         <h2>Silence</h2>

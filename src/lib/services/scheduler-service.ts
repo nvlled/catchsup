@@ -1,10 +1,5 @@
 import { AppEvent } from "../app-event";
-import {
-  DateNumber,
-  Minutes,
-  TimeNumber,
-  UnixTimestamp,
-} from "../../../shared/datetime";
+import { DateNumber, UnixTimestamp } from "../../../shared/datetime";
 import { Goal, GoalID } from "../../../shared/goal";
 import { Scheduler } from "../../../shared/scheduler";
 import { Actions } from "../actions";
@@ -55,6 +50,9 @@ export function createSchedulerService() {
   function onUpdate() {
     Actions.produceNextState((draft) => {
       const { scheduler, window, screen, activeTraining } = draft;
+
+      updateSystrayIcon(draft);
+
       if (
         !activeTraining?.startTime &&
         !Scheduler.hasScheduledGoal(scheduler)
@@ -63,7 +61,6 @@ export function createSchedulerService() {
           draft.scheduler,
           draft.goals
         );
-        updateSystrayIcon(draft);
       }
 
       if (UnixTimestamp.since(scheduler.lastNotify) > 2 * 60) {
@@ -92,8 +89,6 @@ export function createSchedulerService() {
           api.requestWindowAttention(true);
           api.setWindowTitle(goal.title);
           Actions.playShortPromptSound();
-
-          scheduler.scheduleInterval = Scheduler.getNextInterval(draft.goals);
         }
       }
 
@@ -130,6 +125,9 @@ export function createSchedulerService() {
       scheduler.lastComplete = UnixTimestamp.current();
       scheduler.lastGoalID = scheduler.goal?.id ?? null;
       scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
+      scheduler.scheduleInterval = Scheduler.getNextScheduleInterval(
+        draft.goals
+      );
       api.setWindowTitle("");
       updateSystrayIcon(draft);
     });
@@ -169,10 +167,11 @@ export function createSchedulerService() {
     if (activeTraining?.startTime) {
       Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");
     } else {
+      const doneForToday = lastCompleted == DateNumber.current();
       Systray.setIcon(
-        scheduler.goal &&
+        Scheduler.hasScheduledGoal(scheduler) &&
           !Scheduler.isNoDisturbMode(scheduler) &&
-          lastCompleted != DateNumber.current()
+          !doneForToday
           ? "due-now"
           : "blank"
       );

@@ -1,20 +1,16 @@
 
 
-  - click on log to show logs for today
-    - add date filter too 
-    - add edit log while I'm at it
-
 - one more final fixes and simple polishes  
-  - rename cooldown to overtime/extension
-  - remove "reschedule for today"
-  - put duration and cooldown input on one line
-  - add WIP note on about page
-  - update about page
-  - hide spacing features for now,
-    since I don't use them that much anyway
-    and I havent tested them much
+  - default example goals
+  - add title to logs, so the title remains
+    even when the goal is removed
 
+  - move git branch to mvp
+    and create clean main branch
 
+- commit and make a release in github
+
+- add minutes input next to start button
 
 
 - show reward when limit has been passed

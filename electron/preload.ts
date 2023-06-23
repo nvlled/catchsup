@@ -6,7 +6,6 @@ function createInvokers(ns: string, obj: object) {
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === "function") {
-      console.log(">>", ns + "." + k);
       result[k] = async (...args: unknown[]) => {
         const res = await ipcRenderer.invoke(ns + "." + k, ...args);
         return await Promise.resolve(res);

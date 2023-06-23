@@ -4,7 +4,7 @@ import "./styles/App.css";
 
 import { useOnMount } from "./lib/reactext";
 import GoalList from "./GoalList";
-import { useAppStore } from "./lib/state";
+import { State, useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
@@ -18,6 +18,7 @@ import { Scheduler } from "../shared/scheduler";
 import { call } from "./lib/jsext";
 import { TrainingLog } from "../shared/goal";
 import { DateNumber } from "../shared/datetime";
+import { DailyLogs } from "./DailyLogs";
 
 function DailyLimit() {
   const [lastCompleted, logs, scheduler] = useAppStore((state) => [
@@ -26,7 +27,10 @@ function DailyLimit() {
     state.scheduler,
   ]);
   return (
-    <div>
+    <div
+      onClick={() => Actions.changePage("logs")}
+      style={{ cursor: "pointer" }}
+    >
       {TrainingLog.getMinutesToday(logs).toFixed(2)}/
       {scheduler.options.dailyLimit.toFixed(2)}
       {lastCompleted === DateNumber.current() && " ✓"}
@@ -40,6 +44,11 @@ function App() {
   useOnMount(() => {
     const id = ++mountID;
     const services = createServices();
+
+    function onChange(state: State, _prev: State) {
+      (window as any).appState = state;
+    }
+    const unsubscribe = useAppStore.subscribe(onChange);
 
     const mountTask = call(async () => {
       console.log("start mount", id);
@@ -61,6 +70,7 @@ function App() {
       call(async () => {
         await mountTask;
         console.log("start unmount", id);
+        unsubscribe();
         await Actions.deinit();
         await services.stopAll();
         console.log("end unmount", id);
@@ -111,6 +121,8 @@ function App() {
         </>
       ) : page === "about" ? (
         <About />
+      ) : page === "logs" ? (
+        <DailyLogs />
       ) : page === "settings" ? (
         <SettingsView />
       ) : page === "create-goal" ? (

@@ -27,7 +27,6 @@ export function createServices() {
     async stopAll() {
       console.log("stopping services");
       for (const s of services) {
-        console.log(">", s);
         await s.stop();
       }
     },

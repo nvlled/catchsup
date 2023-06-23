@@ -59,7 +59,6 @@ export const apiImpl = {
     lastIcon = icon;
 
     const path = getPublicPath() + (getIconPath(icon) ?? icon);
-    console.log({ path });
 
     if (!tray) {
       const img = nativeImage.createFromPath(path);

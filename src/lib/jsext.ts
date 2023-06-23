@@ -5,6 +5,11 @@ export function callWith<A, B>(x: A, fn: (x: A) => B) {
   return fn(x);
 }
 
+export function padZero(n: number | string, digits = 2) {
+  n = typeof n === "number" ? n.toString() : n;
+  return n.padStart(digits, "0");
+}
+
 export function partition<T>(
   xs: T[],
   predicate: (x: T) => boolean
@@ -29,5 +34,13 @@ export const ArrayUtil = {
       result.push(i);
     }
     return result;
+  },
+};
+
+export const DateUtil = {
+  toStringISO8601(date: Date) {
+    return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(
+      date.getDate()
+    )}`;
   },
 };

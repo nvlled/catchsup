@@ -7,6 +7,9 @@ export function About() {
         <button onClick={() => Actions.changePage("home")}>back</button>
       </div>
       <h1>Catchsup</h1>
+      <div>
+        <em>Note: this is an experimental WIP software.</em>
+      </div>
       <hr />
       <p>Catchsup is a tool to help you to learn a new habit or skill.</p>
       <p>
@@ -44,13 +47,20 @@ export function About() {
           goal, something to keep in mind, or constraints you set for your self.
         </li>
         <li>
-          <b>Set a daily schedule</b>
+          <b>(optional) Pick what days to it</b>
           <br />
           Pick which days you want to do this. It could be every monday and
           tuesdays. Or once a month. Or every other day. Pick whatever you are
           comfortable with. You can always change this later when the schedule
           feels too light or heavy.
           <br />
+          Any day is fine too, the program will pick an available day for you.
+        </li>
+        <li>
+          <b>(optional) Pick what time to it</b>
+          <br />
+          You can set the particular time that you want to do this. But you can
+          leave the default, and let the program pick a time for you.
         </li>
         <li>
           <b>Set a duration</b>

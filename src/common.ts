@@ -15,19 +15,17 @@ export function sleep(ms: number) {
 
 export function nap(ms: number) {
   return new Promise<void>((resolve) => {
-    let start: number | null = null
+    let start: number | null = null;
 
     function loop(time: number) {
-      console.log("elapsed", time - (start ?? 0))
       if (!start) start = time;
       if (time - (start ?? 0) < ms) {
-        requestAnimationFrame(loop)
+        requestAnimationFrame(loop);
       } else {
-        console.log("done")
-        resolve()
+        resolve();
       }
     }
 
-    requestAnimationFrame(loop)
+    requestAnimationFrame(loop);
   });
 }

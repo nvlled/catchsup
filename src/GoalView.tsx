@@ -20,12 +20,17 @@ export default function GoalView({ goal }: Props) {
   const [resched, setResched] = useState(false);
 
   const logs = useAppStore((state) =>
-    state.trainingLogs.filter((g) => g.goalID === goal?.id).reverse()
+    state.trainingLogs.filter((g) => g.goalID === goal?.id)
   );
 
   if (!goal) {
     return (
-      <div>there is no goal, there is no purpose, why are you even here</div>
+      <div>
+        there is no goal, there is no purpose, why are you even here
+        <button className="clear" onClick={() => setEdit(false)}>
+          ← return
+        </button>
+      </div>
     );
   }
 
@@ -42,6 +47,8 @@ export default function GoalView({ goal }: Props) {
     );
   }
 
+  const trainingTime = Goal.getTrainingTime(goal);
+
   return (
     <div className="goal-view">
       <div className="flex-right">
@@ -56,10 +63,12 @@ export default function GoalView({ goal }: Props) {
           <button onClick={() => setEdit(true)}>edit</button>
         </small>
       </div>
-      <button onClick={() => setResched(!resched)}>
+      <span>
         {goal.resched?.date === DateNumber.current() && "*"}
-        {TrainingTime.toString(Goal.getTrainingTime(goal))}
-      </button>
+        {trainingTime === "auto"
+          ? "any time"
+          : TrainingTime.toString(trainingTime)}
+      </span>
       <Space /> | <Space />
       {Goal.getScheduleSummary(goal)}
       <br />

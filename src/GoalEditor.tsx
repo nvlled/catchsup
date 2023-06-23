@@ -10,9 +10,10 @@ import { TimeRangeLabel } from "../shared/datetime";
 import { TimeNumber } from "../shared/datetime";
 import { Space } from "./components";
 import { Producer } from "./lib/immerext";
+import { Rules } from "../shared/rules";
 
 const schedulingTypeLabels: Record<SchedulingType, string> = {
-  daily: "daily",
+  daily: "any day",
   weekly: "weekly",
   monthly: "monthly",
   disabled: "disabled",
@@ -82,16 +83,14 @@ export function GoalEditor({ goal: goalProp, onSubmit }: Props) {
       </div>
       <br />
       <div>
-        <h2>How long do you want to do this?</h2>
+        <h2>How long do you want to do this each day?</h2>
         <TimeDurationEditor goal={editedGoal} onChange={setEditedGoal} />
-        <small>*note: you should start small first</small>
       </div>
       <br />
       <div>
         <h2>What days do you want to do this?</h2>
         <DaySchedEditor goal={editedGoal} onChange={setEditedGoal} />
       </div>
-      <br />
       <br />
       {editedGoal.schedulingType !== "disabled" && (
         <>
@@ -197,6 +196,7 @@ function DaySchedEditor({ goal, onChange }: SubProps) {
       <div className="m2">
         {schedType === "daily" ? (
           <div>
+            {/*
             day interval{" "}
             <input
               type={"number"}
@@ -228,6 +228,7 @@ function DaySchedEditor({ goal, onChange }: SubProps) {
                 />
               </div>
             )}
+            */}
           </div>
         ) : schedType === "weekly" ? (
           <div>
@@ -376,7 +377,8 @@ export function TimeSchedEditor({ goal, onChange }: SubProps) {
       <select value={label} onChange={handleChangeTimeType}>
         {options.map((value) => (
           <option key={value} value={value}>
-            {value} {TrainingTime.toString(value as TrainingTime)}
+            {value === "auto" ? "any time" : value}{" "}
+            {value != "auto" && TrainingTime.toString(value as TrainingTime)}
           </option>
         ))}
       </select>
@@ -399,7 +401,6 @@ export function TimeSchedEditor({ goal, onChange }: SubProps) {
   function handleChangeTimeValue(e: ChangeEvent<HTMLInputElement>) {
     const [hour = 0, min = 0] =
       e.target.value.split(":").map((f) => parseInt(f, 10)) ?? [];
-    console.log({ hour, min });
 
     produceChange((draft) => {
       draft.trainingTime = TimeNumber.construct(hour, min);
@@ -415,29 +416,46 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
       })
     );
 
-  const { durationOptions } = goal;
-
   return (
-    <div>
-      duration:{" "}
+    <div className="bordered">
+      duration:
+      <Space />
       <input
         type="number"
         value={goal.trainingDuration}
         min={5}
         max={60 * 8}
         onChange={handleDurationChange}
-      />{" "}
+      />
       minutes
-      <br />
-      cooldown:
+      <Space count={2} />
+      |
+      <Space count={2} />
+      overtime:
+      <Space />
       <input
         type="number"
-        value={goal.cooldownDuration ?? 0}
+        value={goal.overtime ?? Rules.defaults.overtime}
         min={0}
         max={goal.trainingDuration ?? 1}
         onChange={handleCooldownChange}
-      />{" "}
+      />
       minutes
+      <br />
+      <details>
+        <summary>info</summary>
+        <ul>
+          <li>
+            for new goals, you should start with a small duration, like 15
+            minutes
+          </li>
+          <li>
+            overtime is for additional time for things you need to do before
+            stopping, like note taking.
+          </li>
+        </ul>
+      </details>
+      {/*
       <br />
       <label>
         <input
@@ -463,6 +481,7 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
           />
         </div>
       )}
+      */}
     </div>
   );
 
@@ -476,7 +495,7 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
     produceChange((draft) => (draft.trainingDuration = e.target.valueAsNumber));
   }
   function handleCooldownChange(e: ChangeEvent<HTMLInputElement>) {
-    produceChange((draft) => (draft.cooldownDuration = e.target.valueAsNumber));
+    produceChange((draft) => (draft.overtime = e.target.valueAsNumber));
   }
 
   function handleChangeMinInterval(e: ChangeEvent<HTMLInputElement>): void {

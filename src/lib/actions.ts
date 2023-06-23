@@ -1,7 +1,7 @@
 import { produce } from "immer";
 import { storageName } from "../../shared";
 import { DateNumber, Minutes, UnixTimestamp } from "../../shared/datetime";
-import { Goal, TrainingLog } from "../../shared/goal";
+import { Goal, GoalID, TrainingLog } from "../../shared/goal";
 import { Scheduler } from "../../shared/scheduler";
 import { sleep } from "../common";
 import {
@@ -94,8 +94,8 @@ export const Actions = {
 
   cancelGoalTraining(goal: Goal) {
     Actions.produceNextState((draft) => {
-      draft.page = "home";
-      draft.activeTraining = null;
+      draft.page = "view-goal";
+      draft.activeTraining = { goalID: goal.id };
     });
 
     AppEvent.dispatch("goal-cancelled", goal.id);
@@ -110,7 +110,7 @@ export const Actions = {
         goalID: goal.id,
         startTime: UnixTimestamp.current(),
         silenceNotification: false,
-        cooldownDuration: goal.cooldownDuration,
+        cooldownDuration: goal.overtime,
       };
     });
 
@@ -167,6 +167,17 @@ export const Actions = {
         draft.push(goal);
       }),
     }));
+  },
+
+  updateNoteLog(goalID: GoalID, t: UnixTimestamp, notes: string) {
+    Actions.produceNextState((draft) => {
+      const i = draft.trainingLogs.findIndex(
+        (g) => g.goalID === goalID && g.startTime === t
+      );
+      if (i >= 0) {
+        draft.trainingLogs[i].notes = notes;
+      }
+    });
   },
 
   createBasicGoal({ title, desc }: { title: string; desc: string }) {

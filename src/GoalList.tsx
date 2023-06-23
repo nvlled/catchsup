@@ -9,6 +9,7 @@ import { getRandomQuote } from "./quotes";
 import { ArrayUtil, call, partition } from "./lib/jsext";
 import { Actions } from "./lib/actions";
 import { DateNumber, UnixTimestamp } from "../shared/datetime";
+import { Scheduler } from "../shared/scheduler";
 
 interface Props {
   goals: Goal[];
@@ -71,12 +72,18 @@ export default function GoalList({ goals }: Props) {
       >
         {quote.text}
       </div>
-      {!scheduler.goal && (
-        <small>
-          time to wait until next goal: {minutesUntilNextGoal.toFixed(2)}mins
-        </small>
-      )}
-      <br />
+      {!DateNumber.sameDay(lastCompleted) &&
+        !Scheduler.hasScheduledGoal(scheduler) &&
+        !Scheduler.isNoDisturbMode(scheduler) && (
+          <>
+            <small>
+              time to wait until next goal: {minutesUntilNextGoal.toFixed(2)}
+              mins
+            </small>
+            <br />
+          </>
+        )}
+
       <div className="flex-left">
         <button onClick={handleRandomSelect}>random goal</button>
         <Space count={5} />

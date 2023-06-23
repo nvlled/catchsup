@@ -1,3 +1,5 @@
+import { padZero } from "../src/lib/jsext";
+
 export type WeekDay =
   | "sunday"
   | "monday"
@@ -7,7 +9,8 @@ export type WeekDay =
   | "friday"
   | "saturday";
 
-export type Minutes = number & { __brand: "unix timestamp" };
+export type Seconds = number & { __brand: "seconds" };
+export type Minutes = number & { __brand: "minutes" };
 
 // format: YYYYMMDD -> 20230102
 export type DateNumber = number & { __brand: "date number" };
@@ -37,6 +40,18 @@ export const DateNumber = {
     const num =
       d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
     return num as DateNumber;
+  },
+
+  currentString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${padZero(d.getMonth() + 1)}-${padZero(
+      d.getDate()
+    )}`;
+  },
+
+  sameDay(d1: DateNumber | null | undefined, d2?: DateNumber) {
+    if (!d1) return false;
+    return d1 === (d2 ?? DateNumber.current());
   },
 };
 
@@ -81,8 +96,10 @@ export const UnixTimestamp = {
     return now - t;
   },
 
-  sameDay(t1: UnixTimestamp, t2 = UnixTimestamp.current()) {
-    const [d1, d2] = [t1, t2].map(UnixTimestamp.toDateNumber);
+  sameDay(t1: UnixTimestamp | null | undefined, t2?: UnixTimestamp) {
+    if (!t1) return false;
+    const now = UnixTimestamp.current();
+    const [d1, d2] = [t1, t2 ?? now].map(UnixTimestamp.toDateNumber);
     return d1 === d2;
   },
 };

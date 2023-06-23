@@ -26,11 +26,6 @@ function on(eventName: string, handler: IdentityFn): void {
     defaultDispatcher.handlers.set(eventName, []);
   }
   defaultDispatcher.handlers.get(eventName)?.push(handler);
-  console.log(
-    "on app event",
-    eventName,
-    defaultDispatcher.handlers.get(eventName)
-  );
 }
 
 const off: typeof on = function (
@@ -39,7 +34,6 @@ const off: typeof on = function (
 ): void {
   const fns = defaultDispatcher.handlers.get(eventName);
   if (!fns) return;
-  console.log("off", eventName);
 
   const i = fns?.indexOf(handler);
   if (i >= 0) {
@@ -58,7 +52,6 @@ function dispatch(
 ): void;
 function dispatch(name: string, data?: unknown) {
   const handlers = defaultDispatcher.handlers.get(name);
-  console.log("dispatch", name, { handlers });
   if (handlers) {
     for (const fn of handlers) {
       fn(data);
