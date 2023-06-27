@@ -1,27 +1,30 @@
-import { StateStorage } from "zustand/middleware";
+import { ForwardSlashPath } from "../../shared";
 import { api } from "./api";
 
-let dataDir: string | null = null;
+let dataDir: ForwardSlashPath | null = null;
 
 export const storage = {
-  getData: async (key: string): Promise<string> => {
-    const filename = dataDir ?? (dataDir = await api.withDataDir(key));
-    return await api.readFile(filename);
+  async getItem(name: string): Promise<string | null> {
+    dataDir ??= await api.withDataDir();
+    return await api.readFile((dataDir + "/" + name) as ForwardSlashPath);
   },
-  setData: async (key: string, data: string): Promise<void> => {
-    const filename = dataDir ?? (dataDir = await api.withDataDir(key));
-    await api.writeFile(filename, data);
+  async setItem(name: string, value: string): Promise<void> {
+    dataDir ??= await api.withDataDir();
+    const filename = (dataDir + "/" + name) as ForwardSlashPath;
+    await api.atomicWriteFile(filename, value);
   },
-};
-
-export const NeuStorage: StateStorage = {
-  getItem: (name: string): string | null | Promise<string | null> => {
-    return storage.getData(name);
+  //async atomicSetItem(name: string, value: string): Promise<void> {
+  //  const filename = (dataDir + "/" + name) as ForwardSlashPath;
+  //  await api.atomicWriteFile(filename, tempStorageName, value);
+  //},
+  async removeItem(name: string): Promise<void> {
+    dataDir ??= await api.withDataDir();
+    const filename = (dataDir + "/" + name) as ForwardSlashPath;
+    await api.deleteFile(filename);
   },
-  setItem: (name: string, value: string): void | Promise<void> => {
-    return storage.setData(name, value);
-  },
-  removeItem: (name: string): void | Promise<void> => {
-    return storage.setData(name, "");
+  async hasItem(name: string): Promise<boolean> {
+    dataDir ??= await api.withDataDir();
+    const filename = (dataDir + "/" + name) as ForwardSlashPath;
+    return await api.fileExists(filename);
   },
 };

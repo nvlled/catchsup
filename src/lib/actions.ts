@@ -10,10 +10,18 @@ import {
   parseState,
   State,
   ensureValidState,
+  getPersistentState,
 } from "./state";
-import { storage } from "./storage";
 import { Audios } from "./audios";
 import { AppEvent } from "./app-event";
+import { storage } from "./storage";
+import { createFnMux } from "./fn-mux";
+
+const saveStorage = createFnMux(async () => {
+  console.log("saving data", new Date().toLocaleTimeString());
+  const data = getPersistentState(useAppStore.getState());
+  await storage.setItem(storageName, JSON.stringify(data));
+}, 10 * 1000);
 
 export const Actions = {
   changePage(newPage: AppPage) {
@@ -21,15 +29,19 @@ export const Actions = {
   },
 
   async init() {
-    const data = await Actions.load();
+    const persistentData = await Actions.loadData();
+    console.log({ persistentData });
+    if (isError(persistentData)) {
+      return persistentData;
+    }
 
-    if (data) {
-      if (!data?.scheduler) {
-        data.scheduler = Scheduler.create();
+    if (persistentData) {
+      if (!persistentData?.scheduler) {
+        persistentData.scheduler = Scheduler.create();
       }
 
       useAppStore.setState({
-        ...data,
+        ...persistentData,
       });
     }
 
@@ -39,17 +51,31 @@ export const Actions = {
     }
 
     console.log("initialized");
+    return null;
   },
 
   async deinit() {
     // empty
   },
 
-  async load(): Promise<State | null> {
+  async loadData(): Promise<State | Error | null> {
+    if (!(await storage.hasItem(storageName))) {
+      console.log("no data file found");
+      return null;
+    }
+
     try {
-      const str = await storage.getData(storageName);
+      const str = await storage.getItem(storageName);
+      if (!str) {
+        console.log("empty data file found");
+        return null;
+      }
+
       const obj = JSON.parse(str);
-      if (!parseState(obj)) return null;
+      if (!parseState(obj)) {
+        console.log("cannot parse state", obj);
+        return null;
+      }
       return ensureValidState(obj);
     } catch (e) {
       console.log("failed to parse app data", e);
@@ -57,25 +83,24 @@ export const Actions = {
     }
   },
 
+  save: saveStorage,
+
   produceNextState(producer: (draft: State) => void) {
     useAppStore.setState((state) => {
       return produce(state, producer);
     });
   },
 
-  save() {
-    const data = useAppStore.getState();
-    storage.setData(storageName, JSON.stringify(data));
-  },
-
   deleteGoal(goal: Goal) {
     Actions.produceNextState((draft) => {
       const i = draft.goals.findIndex((g) => g.id === goal.id);
       draft.goals.splice(i, 1);
-      if (draft.activeTraining?.goalID === goal.id) {
+      const store = useAppStore.getState();
+      if (store.activeTraining?.goalID === goal.id) {
         draft.page = "home";
       }
     });
+    Actions.save();
   },
 
   modifyGoal(goal: Goal) {
@@ -85,11 +110,9 @@ export const Actions = {
         draft.goals[index] = goal;
       }
     });
+    Actions.save();
 
     AppEvent.dispatch("goal-modified", goal.id);
-
-    //const { goals } = useAppStore.getState();
-    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   cancelGoalTraining(goal: Goal) {
@@ -97,10 +120,9 @@ export const Actions = {
       draft.page = "view-goal";
       draft.activeTraining = { goalID: goal.id };
     });
+    Actions.save();
 
     AppEvent.dispatch("goal-cancelled", goal.id);
-    //const { goals } = useAppStore.getState();
-    //Systray.setIconByDueState(Goal.checkAllDue(goals));
   },
 
   startGoalTraining(goal: Goal) {
@@ -113,9 +135,9 @@ export const Actions = {
         cooldownDuration: goal.overtime,
       };
     });
+    Actions.save();
 
     AppEvent.dispatch("goal-started", goal.id);
-    //Systray.setIcon("ongoing");
   },
 
   toggleActiveTrainingNotifications() {
@@ -153,6 +175,7 @@ export const Actions = {
           ? DateNumber.current()
           : null;
     });
+    Actions.save();
 
     AppEvent.dispatch("goal-finished", goal.id);
   },
@@ -268,3 +291,11 @@ export const Actions = {
     return () => sound.stop(id);
   },
 };
+
+function isError(x: unknown): x is Error {
+  if (!x) return false;
+  if (typeof x !== "object") return false;
+  if (!("name" in x)) return false;
+  if (!("message" in x)) return false;
+  return true;
+}

@@ -8,6 +8,10 @@ type PromisedReturn<F extends IdentityFn> = (
 export const apiStub = {
   readFile: identityFn as PromisedReturn<typeof apiImpl.readFile>,
   writeFile: identityFn as PromisedReturn<typeof apiImpl.writeFile>,
+  atomicWriteFile: identityFn as PromisedReturn<typeof apiImpl.atomicWriteFile>,
+  deleteFile: identityFn as PromisedReturn<typeof apiImpl.deleteFile>,
+  fileExists: identityFn as PromisedReturn<typeof apiImpl.fileExists>,
+
   showOpenDialog: identityFn as PromisedReturn<typeof apiImpl.showOpenDialog>,
   showSaveDialog: identityFn as PromisedReturn<typeof apiImpl.showSaveDialog>,
   showErrorBox: identityFn as PromisedReturn<typeof apiImpl.showErrorBox>,
@@ -22,6 +26,7 @@ export const apiStub = {
   setTray: identityFn as PromisedReturn<typeof apiImpl.setTray>,
 
   joinPath: identityFn as PromisedReturn<typeof apiImpl.joinPath>,
+  toUnixPath: identityFn as PromisedReturn<typeof apiImpl.toUnixPath>,
 
   requestWindowAttention: identityFn as PromisedReturn<
     typeof apiImpl.requestWindowAttention

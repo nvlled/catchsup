@@ -170,19 +170,16 @@ export function GoalEditor({ goal: goalProp, onSubmit }: Props) {
 }
 
 function DaySchedEditor({ goal, onChange }: SubProps) {
+  /*
   const produceChange = (fn: Producer<Goal>) =>
     onChange(
       produce(goal, (draft) => {
         fn(draft);
       })
     );
+    */
 
-  const {
-    schedulingType: schedType,
-    schedulingData: schedData,
-    schedulingOptions: schedOptions,
-  } = goal;
-  const { daily: dailyOptions } = schedOptions;
+  const { schedulingType: schedType, schedulingData: schedData } = goal;
 
   return (
     <div>
@@ -299,6 +296,7 @@ function DaySchedEditor({ goal, onChange }: SubProps) {
     );
   }
 
+  /*
   function handleChangeInterval(event: ChangeEvent<HTMLInputElement>): void {
     onChange(
       produce(goal, (draft) => {
@@ -326,6 +324,7 @@ function DaySchedEditor({ goal, onChange }: SubProps) {
         (draft.schedulingOptions.daily.autoAdjust = event.target.checked)
     );
   }
+  */
 }
 
 export function TimeSchedEditor({ goal, onChange }: SubProps) {
@@ -485,12 +484,6 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
     </div>
   );
 
-  function handleChangeAutoAdjust(e: ChangeEvent<HTMLInputElement>) {
-    produceChange(
-      (draft) => (draft.durationOptions.autoAdjust = e.target.checked)
-    );
-  }
-
   function handleDurationChange(e: ChangeEvent<HTMLInputElement>) {
     produceChange((draft) => (draft.trainingDuration = e.target.valueAsNumber));
   }
@@ -498,17 +491,23 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
     produceChange((draft) => (draft.overtime = e.target.valueAsNumber));
   }
 
+  /*
+  function handleChangeAutoAdjust(e: ChangeEvent<HTMLInputElement>) {
+    produceChange(
+      (draft) => (draft.durationOptions.autoAdjust = e.target.checked)
+    );
+  }
   function handleChangeMinInterval(e: ChangeEvent<HTMLInputElement>): void {
     produceChange(
       (draft) =>
         (draft.durationOptions.durationRange.min = e.target.valueAsNumber)
     );
   }
-
   function handleChangeMaxInterval(e: ChangeEvent<HTMLInputElement>): void {
     produceChange(
       (draft) =>
         (draft.durationOptions.durationRange.max = e.target.valueAsNumber)
     );
   }
+  */
 }

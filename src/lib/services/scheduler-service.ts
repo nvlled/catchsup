@@ -4,7 +4,7 @@ import { Goal, GoalID } from "../../../shared/goal";
 import { Scheduler } from "../../../shared/scheduler";
 import { Actions } from "../actions";
 import { api } from "../api";
-import { State, useAppStore } from "../state";
+import { PersistentState, useAppStore } from "../state";
 import { Systray } from "../systray";
 
 export function createSchedulerService() {
@@ -49,7 +49,7 @@ export function createSchedulerService() {
 
   function onUpdate() {
     Actions.produceNextState((draft) => {
-      const { scheduler, window, screen, activeTraining } = draft;
+      const { scheduler, activeTraining, window, screen } = draft;
 
       updateSystrayIcon(draft);
 
@@ -162,7 +162,7 @@ export function createSchedulerService() {
     Actions.playShortRewardSound();
   }
 
-  function updateSystrayIcon(state: State) {
+  function updateSystrayIcon(state: PersistentState) {
     const { scheduler, activeTraining, lastCompleted } = state;
     if (activeTraining?.startTime) {
       Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");

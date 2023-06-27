@@ -79,7 +79,7 @@ function createWindow() {
 }
 
 function initStorage() {
-  const dataDir = apiImpl.withDataDir("");
+  const dataDir = apiImpl.withDataDir();
   mkdirSync(dataDir, { recursive: true });
 }
 

@@ -27,7 +27,7 @@ describe("Scheduler", () => {
 
     scheduler.goal = null;
     scheduler.lastComplete = ((UnixTimestamp.current() as number) -
-      scheduler.options.scheduleIntervalMinutes * 60) as UnixTimestamp;
+      scheduler.options.dailyLimit * 60) as UnixTimestamp;
     assert.isTrue(Scheduler.canScheduleNext(scheduler));
 
     scheduler.goal = null;

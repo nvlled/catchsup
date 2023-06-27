@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "./lib/api";
 import { useOnMount } from "./lib/reactext";
 import { call } from "./lib/jsext";
-import { storageName } from "../shared";
+import { ForwardSlashPath, storageName } from "../shared";
 import { parseState, useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import { Space } from "./components";
@@ -120,9 +120,11 @@ export function SettingsView() {
     if (!res.canceled && res.filePaths[0]) {
       const filename = res.filePaths[0];
       const destFile = await api.withAbsoluteDataDir(storageName);
-      const backupFile = await api.withAbsoluteDataDir(storageName + ".backup");
+      const backupFile = await api.withAbsoluteDataDir(
+        (storageName + ".backup") as ForwardSlashPath
+      );
       const oldData = await api.readFile(destFile);
-      const data = await api.readFile(filename);
+      const data = await api.readFile(await api.toUnixPath(filename));
 
       let obj: unknown = undefined;
       let err: unknown | undefined = undefined;
@@ -155,7 +157,7 @@ export function SettingsView() {
       title: "Select file destination",
     });
     if (!res.canceled && res.filePath) {
-      api.exportDataTo(res.filePath);
+      api.exportDataTo(await api.toUnixPath(res.filePath));
     }
   }
 }

@@ -4,7 +4,7 @@ import "./styles/App.css";
 
 import { useOnMount } from "./lib/reactext";
 import GoalList from "./GoalList";
-import { State, useAppStore } from "./lib/state";
+import { useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
@@ -17,8 +17,10 @@ import { api } from "./lib/api";
 import { Scheduler } from "../shared/scheduler";
 import { call } from "./lib/jsext";
 import { TrainingLog } from "../shared/goal";
-import { DateNumber } from "../shared/datetime";
+import { DateNumber, Seconds } from "../shared/datetime";
 import { DailyLogs } from "./DailyLogs";
+import { ErrorView } from "./ErrorView";
+import { BackupsView } from "./BackupsView";
 
 function DailyLimit() {
   const [lastCompleted, logs, scheduler] = useAppStore((state) => [
@@ -39,21 +41,24 @@ function DailyLimit() {
 }
 
 let mountID = 0;
+let startupError: Error | null;
 
 function App() {
   useOnMount(() => {
     const id = ++mountID;
     const services = createServices();
-
-    function onChange(state: State, _prev: State) {
-      (window as any).appState = state;
-    }
-    const unsubscribe = useAppStore.subscribe(onChange);
+    const unsubscribe = useAppStore.subscribe(() =>
+      Actions.save({ waitInterval: true })
+    );
 
     const mountTask = call(async () => {
       console.log("start mount", id);
-      await Actions.init();
-      await services.startAll();
+
+      startupError = await Actions.init();
+      if (!startupError) {
+        await services.startAll();
+      }
+
       console.log("end mount", id);
     });
 
@@ -87,7 +92,9 @@ function App() {
 
   return (
     <>
-      {page === "home" ? (
+      {startupError ? (
+        <ErrorView error={startupError} />
+      ) : page === "home" ? (
         <>
           <div className="flex-between">
             <div className="flex-left">
@@ -119,6 +126,8 @@ function App() {
           <br />
           <GoalList goals={goals} />
         </>
+      ) : page === "backups" ? (
+        <BackupsView />
       ) : page === "about" ? (
         <About />
       ) : page === "logs" ? (
@@ -157,3 +166,25 @@ function App() {
 }
 
 export default App;
+
+function createStateSaver() {
+  const frequency = 60 as Seconds;
+  let toSave = false;
+
+  const timerID = setInterval(async () => {
+    if (toSave) {
+      toSave = false;
+      await Actions.save();
+    }
+  }, frequency * 1000);
+
+  return { save: flagForSaving, stop };
+
+  function stop() {
+    clearInterval(timerID);
+  }
+
+  function flagForSaving() {
+    toSave = true;
+  }
+}

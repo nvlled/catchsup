@@ -22,6 +22,7 @@ export default function GoalList({ goals }: Props) {
     state.scheduler,
     state.goalList.hideGoalList,
   ]);
+
   const doneToday = lastCompleted === DateNumber.current();
   const [quote, setQuote] = useState(getRandomQuote());
   const dueStates = Goal.getDueStates(goals);

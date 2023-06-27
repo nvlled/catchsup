@@ -11,4 +11,8 @@ export type WrapPromise<T extends Fn> = (
   ...args: Parameters<T>
 ) => Promise<ReturnType<T>>;
 
-export const storageName = "catchsup-data";
+export type ForwardSlashPath = string & { __brand: "forward-slash-path" };
+
+export const storageName = "catchsup-data" as ForwardSlashPath;
+
+export const tempStorageName = "catchsup-data.tmp" as ForwardSlashPath;

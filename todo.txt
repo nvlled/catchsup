@@ -1,4 +1,52 @@
 
+- move each log note to a separate .md file
+  - this will reduce write size as well
+    logs/$goalid-1.json // [...]
+    logs/$goalid-2.json // [...]
+    logs/$goalid-2.json // [...]
+  
+
+
+- rotated backups for good measure
+
+
+
+- fix infinity duration when 0 goals
+
+
+- do not use persist middleware
+  - listen for state changes and throttle saving
+  - add manual call to save() on for some actions 
+
+
+- fuck, data gets deleted
+  - make a backup dir with timestamps
+  - show user error if data file exists and
+    data failed to be parsed
+
+  - I should probably not use zustand for auto serialization
+    but it's possible that the data got corrupted when
+    my laptop ran out of battery
+
+- check if current scheduled goal has auto schedule,
+  and check if there are any due goal that has a fixed time set
+
+- show on homepage the due goals with particular time set
+
+- update readme
+  - add screenshots
+  - note: yes it's electron, fight me
+  - download
+  - autorun
+    - add to windows autorun
+      https://support.microsoft.com/en-us/windows/add-an-app-to-run-automatically-at-startup-in-windows-10-150da165-dcd9-7230-517b-cf3c295d89dd
+    - on linux, it depends on your desktop environment
+      on kde, search autostart
+      on gnome: https://askubuntu.com/questions/37957/how-do-i-manage-applications-on-startup-in-gnome-3
+      anything else, you are on your own, you'll figure it out
+      maybe try .xinitrc
+
+- to add a cherry on top, make a shitty landing page too
 
 - one more final fixes and simple polishes  
   - default example goals

@@ -10,6 +10,12 @@ export function padZero(n: number | string, digits = 2) {
   return n.padStart(digits, "0");
 }
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export function partition<T>(
   xs: T[],
   predicate: (x: T) => boolean
@@ -22,6 +28,7 @@ export function partition<T>(
 }
 
 export type Action = () => void;
+export type Awaitable = () => Promise<void>;
 
 export const ArrayUtil = {
   randomSelect<T>(xs: T[]) {

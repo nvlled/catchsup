@@ -1,8 +1,9 @@
-import { default as fsp } from "fs/promises";
+import fs from "fs";
+import upath from "upath";
+import tmp from "tmp";
 
-import path from "path";
 import { Notification, Tray, app, dialog, nativeImage } from "electron";
-import { Urgency, storageName } from "../shared";
+import { ForwardSlashPath, Urgency, storageName } from "../shared";
 import { mainWindow } from "./main";
 import { getIconPath } from "../shared/icon-names";
 
@@ -11,38 +12,64 @@ export function getPublicPath() {
     ? app.getAppPath() + "/dist"
     : app.getAppPath() + "/public/";
 
-  return path.normalize(publicPath);
+  return upath.normalize(publicPath);
 }
 
 let tray: Tray | undefined;
 let lastIcon = "";
 
+function posixPath(pathname: string): ForwardSlashPath {
+  return upath.toUnix(pathname) as ForwardSlashPath;
+}
+
+// Note: all file path arguments should use /,
+// they will be automatically converted to os path separator.
 export const apiImpl = {
-  readFile: (filename: string) => {
-    return fsp.readFile(filename, "utf-8");
+  readFile: (filename: ForwardSlashPath) => {
+    return fs.readFileSync(filename, "utf-8");
   },
-  writeFile: (filename: string, data: string) => {
-    fsp.writeFile(filename, data, "utf-8");
+
+  writeFile: (filename: ForwardSlashPath, data: string) => {
+    fs.writeFileSync(filename, data, "utf-8");
+  },
+
+  atomicWriteFile: (
+    filename: ForwardSlashPath,
+    data: string,
+    tempFilename?: string
+  ) => {
+    tempFilename = posixPath(tempFilename ?? tmp.tmpNameSync());
+    fs.writeFileSync(tempFilename, data, "utf-8");
+    fs.renameSync(tempFilename, filename);
+  },
+
+  deleteFile: (filename: ForwardSlashPath) => {
+    fs.unlinkSync(filename);
+  },
+
+  fileExists: (filename: ForwardSlashPath) => {
+    return fs.existsSync(filename);
   },
 
   showOpenDialog: dialog.showOpenDialog,
   showSaveDialog: dialog.showSaveDialog,
   showErrorBox: dialog.showErrorBox,
 
-  exportDataTo: async (filename: string) => {
-    const sourceFile = apiImpl.withDataDir(storageName);
-    const data = await fsp.readFile(sourceFile, "utf-8");
-    await fsp.writeFile(filename, JSON.stringify(JSON.parse(data), null, 2));
+  exportDataTo: async (filename: ForwardSlashPath) => {
+    const sourceFile = apiImpl.withDataDir(storageName as ForwardSlashPath);
+    const data = await fs.readFileSync(sourceFile, "utf-8");
+    await fs.writeFileSync(filename, JSON.stringify(JSON.parse(data), null, 2));
   },
 
-  importDataFrom: async (filename: string) => {
-    const destFile = apiImpl.withDataDir(storageName);
-    const backupFile = apiImpl.withDataDir(storageName + ".backup");
-    const data = await fsp.readFile(filename, "utf-8");
-    //const obj = JSON.parse(data);
+  importDataFrom: async (filename: ForwardSlashPath) => {
+    const destFile = apiImpl.withDataDir(storageName as ForwardSlashPath);
+    const backupFile = apiImpl.withDataDir(
+      (storageName + ".backup") as ForwardSlashPath
+    );
+    const data = await fs.readFileSync(filename, "utf-8");
 
-    await fsp.writeFile(backupFile, data);
-    await fsp.writeFile(destFile, data);
+    await fs.writeFileSync(backupFile, data);
+    await fs.writeFileSync(destFile, data);
   },
 
   showNotification(title: string, body: string, urgency: Urgency = "normal") {
@@ -69,7 +96,8 @@ export const apiImpl = {
     }
   },
 
-  joinPath: path.join,
+  joinPath: (...paths: string[]) => upath.join(...paths) as ForwardSlashPath,
+  toUnixPath: (p: string) => upath.toUnix(p) as ForwardSlashPath,
 
   requestWindowAttention(yes: boolean) {
     mainWindow?.flashFrame(yes);
@@ -79,13 +107,13 @@ export const apiImpl = {
     return app.getAppPath();
   },
 
-  withDataDir(filename: string) {
-    const dir = app.isPackaged ? app.getPath("userData") : ".";
-    return path.join(dir, filename);
+  withDataDir(filename?: ForwardSlashPath): ForwardSlashPath {
+    const dir = upath.toUnix(app.isPackaged ? app.getPath("userData") : ".");
+    return (!filename ? dir : upath.join(dir, filename)) as ForwardSlashPath;
   },
-  withAbsoluteDataDir(filename: string) {
+  withAbsoluteDataDir(filename: ForwardSlashPath): ForwardSlashPath {
     const dir = app.isPackaged ? app.getPath("userData") : ".";
-    return path.resolve(path.join(dir, filename));
+    return upath.resolve(upath.join(dir, filename)) as ForwardSlashPath;
   },
 
   openDevTools() {
