@@ -14,5 +14,6 @@ export type WrapPromise<T extends Fn> = (
 export type ForwardSlashPath = string & { __brand: "forward-slash-path" };
 
 export const storageName = "catchsup-data" as ForwardSlashPath;
+export const backupDirName = "backups" as ForwardSlashPath;
 
 export const tempStorageName = "catchsup-data.tmp" as ForwardSlashPath;

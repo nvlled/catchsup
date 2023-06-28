@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { storageName } from "../../shared";
+import { ForwardSlashPath, backupDirName, storageName } from "../../shared";
 import { DateNumber, Minutes, UnixTimestamp } from "../../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../../shared/goal";
 import { Scheduler } from "../../shared/scheduler";
@@ -16,6 +16,7 @@ import { Audios } from "./audios";
 import { AppEvent } from "./app-event";
 import { storage } from "./storage";
 import { createFnMux } from "./fn-mux";
+import { api } from "./api";
 
 const saveStorage = createFnMux(async () => {
   console.log("saving data", new Date().toLocaleTimeString());
@@ -30,8 +31,8 @@ export const Actions = {
 
   async init() {
     const persistentData = await Actions.loadData();
-    console.log({ persistentData });
     if (isError(persistentData)) {
+      console.log("error", persistentData);
       return persistentData;
     }
 
@@ -79,7 +80,10 @@ export const Actions = {
       return ensureValidState(obj);
     } catch (e) {
       console.log("failed to parse app data", e);
-      return null;
+      if (isError(e)) {
+        return e;
+      }
+      return new Error("failed to parse data");
     }
   },
 
@@ -181,15 +185,14 @@ export const Actions = {
   },
 
   createGoal(goal: Goal) {
-    useAppStore.setState((state) => ({
-      nextGoalID: state.nextGoalID + 1,
-      goals: produce(state.goals, (draft) => {
-        goal = produce(goal, (goalDraft) => {
-          goalDraft.id = state.nextGoalID;
-        });
-        draft.push(goal);
-      }),
-    }));
+    Actions.produceNextState((draft) => {
+      const id = draft.nextGoalID + 1;
+      draft.nextGoalID = draft.nextGoalID + 1;
+      goal = produce(goal, (goalDraft) => {
+        goalDraft.id = id;
+      });
+      draft.goals.push(goal);
+    });
   },
 
   updateNoteLog(goalID: GoalID, t: UnixTimestamp, notes: string) {
@@ -203,6 +206,7 @@ export const Actions = {
     });
   },
 
+  /*
   createBasicGoal({ title, desc }: { title: string; desc: string }) {
     useAppStore.setState((state) => ({
       nextGoalID: state.nextGoalID + 1,
@@ -216,6 +220,7 @@ export const Actions = {
       }),
     }));
   },
+  */
 
   goalTimeUp() {
     Actions.produceNextState((draft) => {
@@ -250,6 +255,18 @@ export const Actions = {
       const minutes = TrainingLog.getMinutesToday(draft.trainingLogs);
       draft.lastCompleted = minutes >= limit ? DateNumber.current() : null;
       draft.scheduler.options.dailyLimit = limit;
+    });
+  },
+
+  async createBackup(nextCounter: number) {
+    const filename = await api.withAbsoluteDataDir(
+      `${backupDirName}/${nextCounter}.json` as ForwardSlashPath
+    );
+    const data = getPersistentState(useAppStore.getState());
+    await api.atomicWriteFile(filename, JSON.stringify(data));
+    Actions.produceNextState((draft) => {
+      draft.backup.counter = nextCounter;
+      draft.backup.lastBackup = UnixTimestamp.current();
     });
   },
 

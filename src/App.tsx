@@ -4,7 +4,7 @@ import "./styles/App.css";
 
 import { useOnMount } from "./lib/reactext";
 import GoalList from "./GoalList";
-import { useAppStore } from "./lib/state";
+import { PersistentState, State, useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import GoalView from "./GoalView";
 import { GoalEditor } from "./GoalEditor";
@@ -17,10 +17,11 @@ import { api } from "./lib/api";
 import { Scheduler } from "../shared/scheduler";
 import { call } from "./lib/jsext";
 import { TrainingLog } from "../shared/goal";
-import { DateNumber, Seconds } from "../shared/datetime";
+import { DateNumber } from "../shared/datetime";
 import { DailyLogs } from "./DailyLogs";
 import { ErrorView } from "./ErrorView";
 import { BackupsView } from "./BackupsView";
+import { typecheckMissedFields } from "../shared/assert";
 
 function DailyLimit() {
   const [lastCompleted, logs, scheduler] = useAppStore((state) => [
@@ -47,9 +48,38 @@ function App() {
   useOnMount(() => {
     const id = ++mountID;
     const services = createServices();
-    const unsubscribe = useAppStore.subscribe(() =>
-      Actions.save({ waitInterval: true })
-    );
+
+    const unsubscribe = useAppStore.subscribe((state: State, prev: State) => {
+      let modified = false;
+      for (const k of Object.keys(state)) {
+        const name = k as keyof PersistentState;
+        switch (name) {
+          case "activeTraining":
+          case "backup":
+          case "goals":
+          case "lastCompleted":
+          case "nextGoalID":
+          case "scheduler":
+          case "trainingLogs": {
+            if (state[name] !== prev[name]) {
+              modified = true;
+            }
+            break;
+          }
+          default:
+            typecheckMissedFields(name);
+        }
+      }
+
+      if (modified) {
+        Actions.save({ waitInterval: true });
+      }
+    });
+
+    //function onChange(state: State, _prev: State) {
+    //  (window as any).appState = state;
+    //}
+    //const unsubscribe = useAppStore.subscribe(onChange);
 
     const mountTask = call(async () => {
       console.log("start mount", id);
@@ -166,25 +196,3 @@ function App() {
 }
 
 export default App;
-
-function createStateSaver() {
-  const frequency = 60 as Seconds;
-  let toSave = false;
-
-  const timerID = setInterval(async () => {
-    if (toSave) {
-      toSave = false;
-      await Actions.save();
-    }
-  }, frequency * 1000);
-
-  return { save: flagForSaving, stop };
-
-  function stop() {
-    clearInterval(timerID);
-  }
-
-  function flagForSaving() {
-    toSave = true;
-  }
-}

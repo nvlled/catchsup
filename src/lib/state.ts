@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { Goal, GoalID, TrainingLog, ActiveTraining } from "../../shared/goal";
-import { DateNumber } from "../../shared/datetime";
+import { DateNumber, UnixTimestamp } from "../../shared/datetime";
 import { Scheduler } from "../../shared/scheduler";
 
 export type AppPage =
@@ -36,6 +36,11 @@ export interface PersistentState {
   nextGoalID: GoalID;
   lastCompleted: DateNumber | null | undefined;
 
+  backup: {
+    lastBackup: UnixTimestamp | null;
+    counter: number;
+  };
+
   scheduler: Scheduler;
 }
 
@@ -52,10 +57,16 @@ export const useAppStore = create<State>()(() => {
     window: { focused: false },
     screen: { locked: false, suspended: false },
 
+    backup: {
+      counter: 0,
+      lastBackup: null,
+    },
+
     goals: [],
     trainingLogs: [],
     nextGoalID: 1,
   };
+
   return state;
 });
 
@@ -67,6 +78,7 @@ export function getPersistentState(state: State): PersistentState {
     nextGoalID: state.nextGoalID,
     lastCompleted: state.lastCompleted,
     scheduler: state.scheduler,
+    backup: state.backup,
   };
 }
 
@@ -125,6 +137,12 @@ export const useAppStore = create<PersistentState>()(
 export function ensureValidState(state: State) {
   if (!state.scheduler) {
     state.scheduler = Scheduler.create();
+  }
+  if (!state.backup) {
+    state.backup = {
+      counter: 0,
+      lastBackup: null,
+    };
   }
 
   return state;

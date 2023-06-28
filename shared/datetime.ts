@@ -11,6 +11,7 @@ export type WeekDay =
 
 export type Seconds = number & { __brand: "seconds" };
 export type Minutes = number & { __brand: "minutes" };
+export type Hours = number & { __brand: "hours" };
 
 // format: YYYYMMDD -> 20230102
 export type DateNumber = number & { __brand: "date number" };

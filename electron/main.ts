@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { apiImpl, getPublicPath } from "./api-impl";
-import { IdentityFn } from "../shared";
+import { backupDirName, IdentityFn } from "../shared";
 import { mkdirSync } from "fs";
 import { registerElectronEventHandlers } from "../src/lib/electron-events";
 
@@ -80,7 +80,9 @@ function createWindow() {
 
 function initStorage() {
   const dataDir = apiImpl.withDataDir();
+  const backupDir = apiImpl.withDataDir(backupDirName);
   mkdirSync(dataDir, { recursive: true });
+  mkdirSync(backupDir, { recursive: true });
 }
 
 app.on("window-all-closed", () => {

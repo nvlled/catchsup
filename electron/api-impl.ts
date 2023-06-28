@@ -111,9 +111,9 @@ export const apiImpl = {
     const dir = upath.toUnix(app.isPackaged ? app.getPath("userData") : ".");
     return (!filename ? dir : upath.join(dir, filename)) as ForwardSlashPath;
   },
-  withAbsoluteDataDir(filename: ForwardSlashPath): ForwardSlashPath {
+  withAbsoluteDataDir(filename?: ForwardSlashPath): ForwardSlashPath {
     const dir = app.isPackaged ? app.getPath("userData") : ".";
-    return upath.resolve(upath.join(dir, filename)) as ForwardSlashPath;
+    return upath.resolve(upath.join(dir, filename ?? "")) as ForwardSlashPath;
   },
 
   openDevTools() {
