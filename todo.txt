@@ -1,32 +1,20 @@
 
-- show on homepage the due goals with particular time set
+- default example goals
 
 - update readme
-  - add screenshots
-  - note: yes it's electron, fight me
-  - download
-  - autorun
-    - add to windows autorun
-      https://support.microsoft.com/en-us/windows/add-an-app-to-run-automatically-at-startup-in-windows-10-150da165-dcd9-7230-517b-cf3c295d89dd
-    - on linux, it depends on your desktop environment
-      on kde, search autostart
-      on gnome: https://askubuntu.com/questions/37957/how-do-i-manage-applications-on-startup-in-gnome-3
-      anything else, you are on your own, you'll figure it out
-      maybe try .xinitrc
 
 - to add a cherry on top, make a shitty landing page too
+  - little diversion: try using nanojsx for cita.tsx
+  preactjs probably adds a lot on startup time and rendering time
+  maybe even try
+  https://jasonformat.com/wtf-is-jsx/
 
 - one more final fixes and simple polishes  
-  - default example goals
-  - add title to logs, so the title remains
-    even when the goal is removed
 
   - move git branch to mvp
     and create clean main branch
-
-- commit and make a release in github
-
-- add minutes input next to start button
+    because I will most definitely be 
+    judged on my messy initial commits
 
 
 - show reward when limit has been passed

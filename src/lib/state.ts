@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { Goal, GoalID, TrainingLog, ActiveTraining } from "../../shared/goal";
+import {
+  Goal,
+  GoalID,
+  TrainingLog,
+  ActiveTraining,
+  createExampleGoals,
+} from "../../shared/goal";
 import { DateNumber, UnixTimestamp } from "../../shared/datetime";
 import { Scheduler } from "../../shared/scheduler";
 
@@ -29,6 +35,7 @@ export interface TransientState {
   };
   trainingLogs: TrainingLog[];
 }
+
 export interface PersistentState {
   activeTraining: ActiveTraining;
 
@@ -45,8 +52,8 @@ export interface PersistentState {
 
 export type State = TransientState & PersistentState;
 
-export const useAppStore = create<State>()(() => {
-  const state: State = {
+export const State = {
+  create: (): State => ({
     page: "home",
     activeTraining: null,
     scheduler: Scheduler.create(),
@@ -63,10 +70,16 @@ export const useAppStore = create<State>()(() => {
     goals: [],
     trainingLogs: [],
     nextGoalID: 1,
-  };
+  }),
 
-  return state;
-});
+  createWithSampleGoals() {
+    const state = State.create();
+    const nextGoalID = 1;
+    state.goals = createExampleGoals(nextGoalID);
+    state.nextGoalID = nextGoalID + state.goals.length;
+    return state;
+  },
+};
 
 export function getPersistentState(state: State): PersistentState {
   return {
@@ -78,58 +91,6 @@ export function getPersistentState(state: State): PersistentState {
     backup: state.backup,
   };
 }
-
-/*
-export const useAppState = create<TransientState>()(() => {
-  const state: State = {
-    page: "home",
-    activeTraining: null,
-    scheduler: Scheduler.create(),
-    goalList: { hideGoalList: true },
-    lastCompleted: null,
-
-    window: { focused: false },
-    screen: { locked: false, suspended: false },
-
-    goals: [],
-    trainingLogs: [],
-    nextGoalID: 1,
-  };
-  return state;
-});
-
-export const useAppStore = create<PersistentState>()(
-  persist(
-    () => {
-      const state: PersistentState = {
-        activeTraining: null,
-        scheduler: Scheduler.create(),
-        lastCompleted: null,
-
-        goals: [],
-        trainingLogs: [],
-        nextGoalID: 1,
-      };
-      return state;
-    },
-    {
-      name: storageName,
-      storage: createJSONStorage(() => storage),
-      //partialize: (state) => {
-      //  const s: PersistentState = {
-      //    activeTraining: state.activeTraining,
-      //    goals: state.goals,
-      //    trainingLogs: state.trainingLogs,
-      //    nextGoalID: state.nextGoalID,
-      //    lastCompleted: state.lastCompleted,
-      //    scheduler: state.scheduler,
-      //  };
-      //  return s;
-      //},
-    }
-  )
-);
-*/
 
 export function ensureValidState(state: State) {
   if (!state.scheduler) {
@@ -153,3 +114,5 @@ export function parseState(obj: unknown): obj is State {
 
   return true;
 }
+
+export const useAppStore = create<State>()(State.create);

@@ -92,7 +92,7 @@ export function createSchedulerService() {
           api.showNotification("hey", "uh, hello");
         } else {
           Scheduler.updateNotificationData(scheduler);
-          api.showNotification(goal.title, goal.desc.slice(0, 100) ?? "hey");
+          api.showNotification(goal.title, goal.desc.slice(0, 200) ?? "hey");
           api.requestWindowAttention(true);
           api.setWindowTitle(goal.title);
           Actions.playShortPromptSound();

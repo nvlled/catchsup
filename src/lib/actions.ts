@@ -24,6 +24,8 @@ import { createFnMux } from "./fn-mux";
 import { api } from "./api";
 import { Logs } from "./logs";
 
+const errNoDataFile = new Error("no data file found");
+
 const saveStorage = createFnMux(async () => {
   console.log("saving data", new Date().toLocaleTimeString());
   const data = getPersistentState(useAppStore.getState());
@@ -36,11 +38,16 @@ export const Actions = {
   },
 
   async init() {
-    const persistentData = await Actions.loadData();
+    let persistentData = await Actions.loadData();
 
     if (isError(persistentData)) {
-      console.log("error", persistentData);
-      return [persistentData];
+      const err = persistentData;
+      if (err != errNoDataFile) {
+        console.log("error", err);
+        return [err];
+      }
+
+      persistentData = State.createWithSampleGoals();
     }
 
     if (persistentData) {
@@ -82,7 +89,7 @@ export const Actions = {
   async loadData(): Promise<State | Error | null> {
     if (!(await storage.hasItem(storageName))) {
       console.log("no data file found");
-      return null;
+      return errNoDataFile;
     }
 
     try {

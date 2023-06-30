@@ -27,6 +27,10 @@ function posixPath(pathname: string): ForwardSlashPath {
 // Note: all file path arguments should use /,
 // they will be automatically converted to os path separator.
 export const apiImpl = {
+  version: () => {
+    return app.getVersion();
+  },
+
   readFile: (filename: ForwardSlashPath) => {
     return fs.readFileSync(filename, "utf-8");
   },

@@ -503,3 +503,48 @@ export const Goal = {
     }
   },
 };
+
+export function createExampleGoals(nextID: GoalID): Goal[] {
+  return [
+    {
+      ...Goal.createEmpty(nextID++),
+      title: "Read a book",
+      desc: `
+Edit this and put any book that you are curious about!
+
+If your attention span is all messed up like me,
+reading a book will be very difficult 
+since you are likely used to endlessly scrolling
+on the internet on your spare time.
+
+But do try reading a book 15 minutes a day anyway.
+It worked for me.
+      `,
+    },
+
+    {
+      ...Goal.createEmpty(nextID++),
+      title: "Mediate",
+      desc: `
+Rules:
+- do nothing, close your eyes or distantly stare at something
+- listening to slow or relaxing music is fine, lo-fi works too
+- no listening to podcast or any kind of radio talk
+- no talking, reading, watching, eating, or sleeping
+- avoid moving too much, be still
+- avoid shifting your eyes around too much
+- relax muscles
+- do not look at the time
+      `,
+    },
+
+    {
+      ...Goal.createEmpty(nextID++),
+      title: "Learn to draw",
+      desc: `
+1. Find any book or videos to learn from or follow
+2. Practice drawing 
+      `,
+    },
+  ];
+}

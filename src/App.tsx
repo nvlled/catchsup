@@ -32,6 +32,7 @@ function DailyLimit() {
   ]);
   return (
     <div
+      title="hours done / hourly limit"
       onClick={() => Actions.changePage("logs")}
       style={{ cursor: "pointer" }}
     >
@@ -131,13 +132,14 @@ function App() {
           <div className="flex-between">
             <div className="flex-left">
               <a
+                className="logo"
                 href="#"
                 title="??"
                 onClick={() => Actions.changePage("about")}
               >
                 <img src={"icons/icon.png"} style={{ width: "30px" }} />
               </a>
-              <Space />
+              <Space count={3} />
               <DailyLimit />
             </div>
             <div className="flex-right">

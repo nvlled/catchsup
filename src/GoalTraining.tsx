@@ -89,6 +89,13 @@ export function GoalTraining({ goal }: Props) {
                 disabled={confirmState === "accept"}
               />
               <br />
+              <em>
+                Note: Don't think too hard on what to write. Just write any
+                detail that you think is notable. Keep it simple, write broken
+                english if you must, or just put a list of key words or phrases.
+                You can always put your full coherent thoughts somewhere else.
+              </em>
+              <br />
               <button
                 onClick={handleAccept}
                 disabled={confirmState === "accept"}

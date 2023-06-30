@@ -6,6 +6,8 @@ type PromisedReturn<F extends IdentityFn> = (
 ) => Promise<ReturnType<F>>;
 
 export const apiStub = {
+  version: identityFn as PromisedReturn<typeof apiImpl.version>,
+
   readFile: identityFn as PromisedReturn<typeof apiImpl.readFile>,
   writeFile: identityFn as PromisedReturn<typeof apiImpl.writeFile>,
   atomicWriteFile: identityFn as PromisedReturn<typeof apiImpl.atomicWriteFile>,
