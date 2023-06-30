@@ -1,12 +1,25 @@
+import { useState } from "react";
 import { Actions } from "./lib/actions";
+import { useOnMount } from "./lib/reactext";
+import { api } from "./lib/api";
+import { call } from "./lib/jsext";
 
 export function About() {
+  const [version, setVersion] = useState("");
+  useOnMount(() => {
+    call(async () => {
+      setVersion(await api.version());
+    });
+  });
+
   return (
     <div>
       <div className="flex-right">
         <button onClick={() => Actions.changePage("home")}>back</button>
       </div>
-      <h1>Catchsup</h1>
+      <h1>
+        Catchsup <small>{version}</small>
+      </h1>
       <div>
         <em>Note: this is an experimental WIP software.</em>
       </div>
