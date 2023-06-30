@@ -1,5 +1,10 @@
 import { produce } from "immer";
-import { ForwardSlashPath, backupDirName, storageName } from "../../shared";
+import {
+  ForwardSlashPath,
+  backupDirName,
+  logsDirName,
+  storageName,
+} from "../../shared";
 import { DateNumber, Minutes, UnixTimestamp } from "../../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../../shared/goal";
 import { Scheduler } from "../../shared/scheduler";
@@ -17,6 +22,7 @@ import { AppEvent } from "./app-event";
 import { storage } from "./storage";
 import { createFnMux } from "./fn-mux";
 import { api } from "./api";
+import { Logs } from "./logs";
 
 const saveStorage = createFnMux(async () => {
   console.log("saving data", new Date().toLocaleTimeString());
@@ -31,15 +37,29 @@ export const Actions = {
 
   async init() {
     const persistentData = await Actions.loadData();
+
     if (isError(persistentData)) {
       console.log("error", persistentData);
-      return persistentData;
+      return [persistentData];
     }
 
     if (persistentData) {
       if (!persistentData?.scheduler) {
         persistentData.scheduler = Scheduler.create();
       }
+
+      const [logs, errs] = await Logs.readAll(
+        persistentData.goals.map((g) => g.id)
+      );
+      if (errs != null) {
+        return errs;
+      }
+
+      persistentData.trainingLogs = logs.map((l) => ({
+        goalID: l.goalID,
+        startTime: l.startTime,
+        elapsed: l.elapsed,
+      }));
 
       useAppStore.setState({
         ...persistentData,
@@ -154,9 +174,12 @@ export const Actions = {
   },
 
   finishGoalTraining(goal: Goal, elapsed: number, notes?: string) {
+    let startTime = UnixTimestamp.current();
     Actions.produceNextState((draft) => {
       const { activeTraining } = draft;
       if (!activeTraining?.startTime) return;
+
+      startTime = activeTraining.startTime;
 
       const i = draft.goals.findIndex((g) => g.id === goal.id);
       if (i >= 0) {
@@ -169,10 +192,10 @@ export const Actions = {
       draft.activeTraining = null;
       draft.trainingLogs.push({
         goalID: goal.id,
-        elapsed,
+        elapsed: elapsed as Minutes,
         startTime: activeTraining.startTime,
-        notes,
       });
+
       const minutes = TrainingLog.getMinutesToday(draft.trainingLogs);
       draft.lastCompleted =
         minutes >= draft.scheduler.options.dailyLimit
@@ -180,6 +203,13 @@ export const Actions = {
           : null;
     });
     Actions.save();
+
+    Logs.append({
+      goalID: goal.id,
+      elapsed: elapsed as Minutes,
+      startTime: startTime,
+      notes,
+    });
 
     AppEvent.dispatch("goal-finished", goal.id);
   },
@@ -196,14 +226,14 @@ export const Actions = {
   },
 
   updateNoteLog(goalID: GoalID, t: UnixTimestamp, notes: string) {
-    Actions.produceNextState((draft) => {
-      const i = draft.trainingLogs.findIndex(
-        (g) => g.goalID === goalID && g.startTime === t
-      );
-      if (i >= 0) {
-        draft.trainingLogs[i].notes = notes;
-      }
-    });
+    const state = useAppStore.getState();
+    const i = state.trainingLogs.findIndex(
+      (g) => g.goalID === goalID && g.startTime === t
+    );
+    if (i >= 0) {
+      const log = { ...state.trainingLogs[i], notes };
+      Logs.update(log);
+    }
   },
 
   /*
@@ -258,16 +288,22 @@ export const Actions = {
     });
   },
 
-  async createBackup(nextCounter: number) {
-    const filename = await api.withAbsoluteDataDir(
-      `${backupDirName}/${nextCounter}.json` as ForwardSlashPath
+  async createDataBackup() {
+    const destDataFile = await api.withAbsoluteDataDir(
+      `${backupDirName}/${storageName}` as ForwardSlashPath
     );
+    const srcLogDir = await api.withAbsoluteDataDir(logsDirName);
+    const destLogDir = await api.withAbsoluteDataDir(backupDirName);
+
+    console.log({ destDataFile, srcLogDir, destLogDir });
+
     const data = getPersistentState(useAppStore.getState());
-    await api.atomicWriteFile(filename, JSON.stringify(data));
+    await api.atomicWriteFile(destDataFile, JSON.stringify(data));
     Actions.produceNextState((draft) => {
-      draft.backup.counter = nextCounter;
       draft.backup.lastBackup = UnixTimestamp.current();
     });
+
+    await api.copyFiles(srcLogDir, destLogDir);
   },
 
   playShortPromptSound() {

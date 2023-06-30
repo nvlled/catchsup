@@ -75,7 +75,8 @@ export default function GoalList({ goals }: Props) {
       </div>
       {!DateNumber.sameDay(lastCompleted) &&
         !Scheduler.hasScheduledGoal(scheduler) &&
-        !Scheduler.isNoDisturbMode(scheduler) && (
+        !Scheduler.isNoDisturbMode(scheduler) &&
+        goals.length > 0 && (
           <>
             <small>
               time to wait until next goal: {minutesUntilNextGoal.toFixed(2)}

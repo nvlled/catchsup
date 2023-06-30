@@ -1,9 +1,11 @@
 import fs from "fs";
+import fsp from "fs/promises";
+
 import upath from "upath";
 import tmp from "tmp";
 
 import { Notification, Tray, app, dialog, nativeImage } from "electron";
-import { ForwardSlashPath, Urgency, storageName } from "../shared";
+import { ForwardSlashPath, Urgency, devDataDir, storageName } from "../shared";
 import { mainWindow } from "./main";
 import { getIconPath } from "../shared/icon-names";
 
@@ -49,6 +51,26 @@ export const apiImpl = {
 
   fileExists: (filename: ForwardSlashPath) => {
     return fs.existsSync(filename);
+  },
+
+  readDir: (dirname: ForwardSlashPath) => {
+    return fs.readdirSync(dirname);
+  },
+  readDataDir: (dirname: ForwardSlashPath) => {
+    dirname = apiImpl.withDataDir(dirname);
+    return fs.readdirSync(dirname);
+  },
+
+  mkdir: (dirname: ForwardSlashPath) => {
+    fs.mkdirSync(dirname, { recursive: true });
+  },
+
+  copyFiles: async (srcDir: ForwardSlashPath, destDir: ForwardSlashPath) => {
+    for (const filename of await fsp.readdir(srcDir)) {
+      const srcFile = upath.join(srcDir, filename);
+      const destFile = upath.join(destDir, filename);
+      await fsp.copyFile(srcFile, destFile);
+    }
   },
 
   showOpenDialog: dialog.showOpenDialog,
@@ -108,11 +130,13 @@ export const apiImpl = {
   },
 
   withDataDir(filename?: ForwardSlashPath): ForwardSlashPath {
-    const dir = upath.toUnix(app.isPackaged ? app.getPath("userData") : ".");
+    const dir = upath.toUnix(
+      app.isPackaged ? app.getPath("userData") : devDataDir
+    );
     return (!filename ? dir : upath.join(dir, filename)) as ForwardSlashPath;
   },
   withAbsoluteDataDir(filename?: ForwardSlashPath): ForwardSlashPath {
-    const dir = app.isPackaged ? app.getPath("userData") : ".";
+    const dir = app.isPackaged ? app.getPath("userData") : devDataDir;
     return upath.resolve(upath.join(dir, filename ?? "")) as ForwardSlashPath;
   },
 

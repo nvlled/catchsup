@@ -59,6 +59,8 @@ export default function GoalView({ goal }: Props) {
       <div className="goal-view-header">
         <h1>{goal.title}</h1>
         <Space />
+        <strong>#{goal.id}</strong>
+        <Space />
         <small>
           <button onClick={() => setEdit(true)}>edit</button>
         </small>

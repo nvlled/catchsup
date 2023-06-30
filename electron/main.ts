@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { apiImpl, getPublicPath } from "./api-impl";
-import { backupDirName, IdentityFn } from "../shared";
+import { backupDirName, devDataDir, IdentityFn, logsDirName } from "../shared";
 import { mkdirSync } from "fs";
 import { registerElectronEventHandlers } from "../src/lib/electron-events";
 
@@ -43,7 +43,7 @@ export let mainWindow: BrowserWindow | null;
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 
 function createWindow() {
-  initStorage();
+  initFilesystem();
   createHandlers("api", apiImpl);
   registerElectronEventHandlers();
 
@@ -78,11 +78,14 @@ function createWindow() {
   }
 }
 
-function initStorage() {
+function initFilesystem() {
   const dataDir = apiImpl.withDataDir();
   const backupDir = apiImpl.withDataDir(backupDirName);
+  const logsDir = apiImpl.withDataDir(logsDirName);
+  mkdirSync(devDataDir, { recursive: true });
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(backupDir, { recursive: true });
+  mkdirSync(logsDir, { recursive: true });
 }
 
 app.on("window-all-closed", () => {

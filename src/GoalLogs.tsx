@@ -1,12 +1,15 @@
 import "./styles/GoalLogs.css";
 
 import { marked } from "marked";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Space } from "./components";
 import { UnixTimestamp } from "../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../shared/goal";
 import { produce } from "immer";
 import { Actions } from "./lib/actions";
+import { useOnMount } from "./lib/reactext";
+import { call } from "./lib/jsext";
+import { Log, Logs } from "./lib/logs";
 
 export function GoalLogs({
   goals,
@@ -17,14 +20,42 @@ export function GoalLogs({
 }) {
   const [shownIDs, setShownIDs] = useState(new Set<number>());
   const [editEntry, setEditEntry] = useState<UnixTimestamp | null>(null);
+  const [allLogs, setAllLogs] = useState<Log[] | null>(null);
+  const [errors, setErrors] = useState<Error[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const goalMap = Object.fromEntries(goals?.map((g) => [g.id, g]) ?? []);
 
-  logs = [...logs].reverse();
+  useEffect(() => {
+    call(async () => {
+      const [allLogs, errors] = await Logs.readAll(logs.map((l) => l.goalID));
+      allLogs?.reverse();
+      setAllLogs(allLogs);
+      setErrors(errors);
+    });
+  }, [logs]);
+
+  if (!allLogs && !errors) {
+    return <div className="goal-logs">loading...</div>;
+  }
+
+  if (errors || !allLogs) {
+    return (
+      <div className="goal-logs">
+        <h2>An error occured while reading your notes</h2>
+        <ul>
+          {errors?.map((e) => (
+            <li>
+              {e.name}:{e.message}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div className="goal-logs">
-      {logs.map((e) => {
+      {allLogs.map((e) => {
         // TODO: better if I use an ID, but startTime will do for now
         // since it's at least guaranteed unique per log entry
         const shown = shownIDs.has(e.startTime);
@@ -41,7 +72,12 @@ export function GoalLogs({
             className="goal-log-note-entry"
           >
             <span className="goal-log-note-entry-date">
-              {goalMap && <span>{goalMap[e.goalID]?.title}</span>}
+              {goalMap && (
+                <>
+                  <span>{goalMap[e.goalID]?.title}</span>
+                  <br />
+                </>
+              )}
               <Space />[{d.toLocaleDateString()} {d.toLocaleTimeString()}
               ]
               <Space />
@@ -100,7 +136,18 @@ export function GoalLogs({
     setEditEntry(id);
   }
   function handleSaveEdit(goalID: GoalID, t: UnixTimestamp) {
-    Actions.updateNoteLog(goalID, t, textareaRef.current?.value.trim() ?? "");
+    const notes = textareaRef.current?.value.trim() ?? "";
+    Actions.updateNoteLog(goalID, t, notes);
+    setAllLogs(
+      produce(allLogs, (draft) => {
+        if (!draft) return;
+        for (const o of draft) {
+          if (o.goalID === goalID && o.startTime === t) {
+            o.notes = notes;
+          }
+        }
+      })
+    );
     setEditEntry(null);
   }
   function handleCancelEdit(_id: UnixTimestamp) {

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { backupDirName, storageName } from "../shared";
-import { Actions } from "./lib/actions";
 import { api } from "./lib/api";
 import { call } from "./lib/jsext";
 import { useOnMount } from "./lib/reactext";
 
-export function ErrorView({ error }: { error: Error }) {
+export function ErrorView({ errors }: { errors: Error[] }) {
   const [dataDir, setDataDir] = useState("");
 
   useOnMount(() => {
@@ -19,7 +18,9 @@ export function ErrorView({ error }: { error: Error }) {
     <div>
       <h1>Oh noes, failed to load your data</h1>
       <br />
-      <code>{error.name + ": " + error.message}</code>
+      {errors.map((error, i) => (
+        <code key={error.name + i}>{error.name + ": " + error.message}</code>
+      ))}
       <br />
       <br />
       This could mean that your data is corrupted, or is in invalid format. You

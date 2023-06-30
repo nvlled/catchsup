@@ -27,18 +27,17 @@ export interface TransientState {
   goalList: {
     hideGoalList?: boolean;
   };
+  trainingLogs: TrainingLog[];
 }
 export interface PersistentState {
   activeTraining: ActiveTraining;
 
   goals: Goal[];
-  trainingLogs: TrainingLog[];
   nextGoalID: GoalID;
   lastCompleted: DateNumber | null | undefined;
 
   backup: {
     lastBackup: UnixTimestamp | null;
-    counter: number;
   };
 
   scheduler: Scheduler;
@@ -58,7 +57,6 @@ export const useAppStore = create<State>()(() => {
     screen: { locked: false, suspended: false },
 
     backup: {
-      counter: 0,
       lastBackup: null,
     },
 
@@ -74,7 +72,6 @@ export function getPersistentState(state: State): PersistentState {
   return {
     activeTraining: state.activeTraining,
     goals: state.goals,
-    trainingLogs: state.trainingLogs,
     nextGoalID: state.nextGoalID,
     lastCompleted: state.lastCompleted,
     scheduler: state.scheduler,
@@ -140,7 +137,6 @@ export function ensureValidState(state: State) {
   }
   if (!state.backup) {
     state.backup = {
-      counter: 0,
       lastBackup: null,
     };
   }
@@ -153,9 +149,7 @@ export function parseState(obj: unknown): obj is State {
   if (typeof obj !== "object") return false;
   if (typeof obj !== "object") return false;
   if (!("goals" in obj)) return false;
-  if (!("trainingLogs" in obj)) return false;
   if (!Array.isArray(obj.goals)) return false;
-  if (!Array.isArray(obj.trainingLogs)) return false;
 
   return true;
 }

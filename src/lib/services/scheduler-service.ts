@@ -21,7 +21,7 @@ export function createSchedulerService() {
       }
       updateSystrayIcon(draft);
 
-      draft.scheduler.intervalID = setInterval(onUpdate, 5 * 1000);
+      draft.scheduler.intervalID = setInterval(onUpdate, 10 * 1000);
       AppEvent.on("settings-updated", onSettingsUpdated);
       AppEvent.on("goal-started", onGoalStarted);
       AppEvent.on("goal-finished", onGoalFinished);
@@ -49,14 +49,21 @@ export function createSchedulerService() {
 
   function onUpdate() {
     Actions.produceNextState((draft) => {
-      const { scheduler, activeTraining, window, screen } = draft;
+      const { goals, scheduler, activeTraining, window, screen } = draft;
 
       updateSystrayIcon(draft);
 
-      if (
-        !activeTraining?.startTime &&
-        !Scheduler.hasScheduledGoal(scheduler)
-      ) {
+      const hasScheduledGoal = Scheduler.hasScheduledGoal(scheduler);
+      let reschedNonAuto = false;
+      if (hasScheduledGoal) {
+        const goal = goals.find((g) => g.id === scheduler.goal?.id);
+        const isAuto = goal?.trainingTime === "auto";
+        reschedNonAuto =
+          isAuto &&
+          goals.some((g) => Goal.isDueNow(g) && g.trainingTime !== "auto");
+      }
+
+      if (!activeTraining?.startTime && (!hasScheduledGoal || reschedNonAuto)) {
         scheduler.goal = Scheduler.findNextSchedule(
           draft.scheduler,
           draft.goals

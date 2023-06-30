@@ -33,7 +33,9 @@ export function SettingsView() {
 
   return (
     <div>
-      <small>next notification in {secondsUntilNextNotif}secs</small>
+      {Number.isFinite(secondsUntilNextNotif) && (
+        <small>next notification in {secondsUntilNextNotif}secs</small>
+      )}
       <div className="flex-right">
         <button onClick={() => Actions.changePage("home")}>← back</button>
       </div>

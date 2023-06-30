@@ -11,6 +11,9 @@ export const apiStub = {
   atomicWriteFile: identityFn as PromisedReturn<typeof apiImpl.atomicWriteFile>,
   deleteFile: identityFn as PromisedReturn<typeof apiImpl.deleteFile>,
   fileExists: identityFn as PromisedReturn<typeof apiImpl.fileExists>,
+  readDir: identityFn as PromisedReturn<typeof apiImpl.readDir>,
+  mkdir: identityFn as PromisedReturn<typeof apiImpl.mkdir>,
+  copyFiles: identityFn as PromisedReturn<typeof apiImpl.copyFiles>,
 
   showOpenDialog: identityFn as PromisedReturn<typeof apiImpl.showOpenDialog>,
   showSaveDialog: identityFn as PromisedReturn<typeof apiImpl.showSaveDialog>,

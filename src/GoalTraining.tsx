@@ -3,7 +3,7 @@ import { Goal } from "../shared/goal";
 import { useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import { Space } from "./components";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { UnixTimestamp } from "../shared/datetime";
 import { useOnMount, useTimer } from "./lib/reactext";
 import { marked } from "marked";
@@ -17,16 +17,21 @@ export interface Props {
 type ConfirmState = "accept" | "reject" | "prompt";
 
 export function GoalTraining({ goal }: Props) {
-  const activeTraining = useAppStore((state) => state.activeTraining);
+  const [activeTraining, allLogs] = useAppStore((state) => [
+    state.activeTraining,
+    state.trainingLogs,
+  ]);
   const [confirmState, setConfirmState] = useState<ConfirmState>("prompt");
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
   const startTime = activeTraining?.startTime ?? UnixTimestamp.current();
   const isDone = goal && Goal.isTrainingDone(goal, activeTraining);
 
-  const logs = useAppStore((state) =>
-    state.trainingLogs.filter((g) => g.goalID === goal?.id).reverse()
-  );
+  const logs = useMemo(() => {
+    const result = allLogs.filter((g) => g.goalID === goal?.id);
+    result.reverse();
+    return result;
+  }, [goal?.id, allLogs]);
 
   useOnMount(() => {
     let stop: Action | undefined;
@@ -39,7 +44,7 @@ export function GoalTraining({ goal }: Props) {
     };
   });
 
-  useTimer(1000);
+  useTimer(10 * 1000);
 
   return (
     <div className="goal-training">
@@ -151,7 +156,7 @@ export function GoalTraining({ goal }: Props) {
             <>
               <details>
                 <summary>Logs</summary>
-                <GoalLogs logs={logs} />
+                <GoalLogs key={goal.id} logs={logs} />
               </details>
             </>
           ) : null}

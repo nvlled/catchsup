@@ -15,5 +15,7 @@ export type ForwardSlashPath = string & { __brand: "forward-slash-path" };
 
 export const storageName = "catchsup-data" as ForwardSlashPath;
 export const backupDirName = "backups" as ForwardSlashPath;
+export const logsDirName = "notes-and-logs" as ForwardSlashPath;
+export const devDataDir = ".dev-user-data" as ForwardSlashPath;
 
 export const tempStorageName = "catchsup-data.tmp" as ForwardSlashPath;

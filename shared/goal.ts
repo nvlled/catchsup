@@ -5,15 +5,15 @@ import {
   Week,
   UnixTimestamp,
   WeekDay,
+  Minutes,
 } from "./datetime";
 
 import { Motivator } from "./motivator";
 
 export interface TrainingLog {
-  goalID: number;
+  goalID: GoalID;
   startTime: UnixTimestamp;
-  elapsed: number;
-  notes?: string;
+  elapsed: Minutes;
 }
 
 export const TrainingLog = {

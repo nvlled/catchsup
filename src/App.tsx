@@ -42,7 +42,7 @@ function DailyLimit() {
 }
 
 let mountID = 0;
-let startupError: Error | null;
+let startupErrors: Error[] | null;
 
 function App() {
   useOnMount(() => {
@@ -59,8 +59,7 @@ function App() {
           case "goals":
           case "lastCompleted":
           case "nextGoalID":
-          case "scheduler":
-          case "trainingLogs": {
+          case "scheduler": {
             if (state[name] !== prev[name]) {
               modified = true;
             }
@@ -84,8 +83,8 @@ function App() {
     const mountTask = call(async () => {
       console.log("start mount", id);
 
-      startupError = await Actions.init();
-      if (!startupError) {
+      startupErrors = await Actions.init();
+      if (!startupErrors) {
         await services.startAll();
       }
 
@@ -122,8 +121,8 @@ function App() {
 
   return (
     <>
-      {startupError ? (
-        <ErrorView error={startupError} />
+      {startupErrors ? (
+        <ErrorView errors={startupErrors} />
       ) : page === "home" ? (
         <>
           <div className="flex-between">

@@ -1,33 +1,4 @@
 
-- move each log note to a separate .md file
-  - this will reduce write size as well
-    logs/$goalid-1.json // [...]
-    logs/$goalid-2.json // [...]
-    logs/$goalid-2.json // [...]
-  
-
-
-- rotated backups for good measure
-
-
-
-- fix infinity duration when 0 goals
-
-
-- do not use persist middleware
-  - listen for state changes and throttle saving
-  - add manual call to save() on for some actions 
-
-
-- fuck, data gets deleted
-  - make a backup dir with timestamps
-  - show user error if data file exists and
-    data failed to be parsed
-
-  - I should probably not use zustand for auto serialization
-    but it's possible that the data got corrupted when
-    my laptop ran out of battery
-
 - check if current scheduled goal has auto schedule,
   and check if there are any due goal that has a fixed time set
 
