@@ -41,11 +41,18 @@ export type ActiveTraining = {
 
 export type GoalID = number;
 
-export const dueStates = ["due-now", "due-later", "was-due", "free"] as const;
+export const dueStates = [
+  "due-now",
+  "due-later",
+  "was-due",
+  "free",
+  "available",
+] as const;
 export type GoalDueState = (typeof dueStates)[number];
 
 export const goalDueStateImages: Record<GoalDueState, string> = {
   "due-now": "icons/due-now.png",
+  available: "icons/due-now.png",
   "due-later": "icons/due-later.png",
   "was-due": "icons/was-due.png",
   free: "",
@@ -427,10 +434,15 @@ export const Goal = {
       return "free";
     }
 
+    if (goal.trainingTime === "auto") {
+      return "available";
+    }
+
     const trainingTime = Goal.getTrainingTime(goal);
     if (TrainingTime.inRange(trainingTime, now)) {
       return "due-now";
     }
+
     const [startTime, endTime] = TrainingTime.getTimeRange(trainingTime);
     const startTimestamp = UnixTimestamp.from(DateNumber.current(), startTime);
     const endTimestamp = UnixTimestamp.from(DateNumber.current(), endTime);

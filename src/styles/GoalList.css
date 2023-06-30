@@ -43,7 +43,11 @@
 }
 
 .goal-list-entry-marker.due-now {
-  color: #0f0;
+  color: #0b0;
+}
+
+.goal-list-entry-marker.available {
+  color: #0ba;
 }
 
 .goal-list-entry-marker.due-later {

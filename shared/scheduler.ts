@@ -112,7 +112,7 @@ export const Scheduler = {
 
     for (const g of goals) {
       const s = Goal.checkDue(g);
-      if (!["due-now", "was-due"].includes(s)) continue;
+      if (!["due-now", "was-due", "available"].includes(s)) continue;
 
       dueCount++;
       (g.trainingTime === "auto"

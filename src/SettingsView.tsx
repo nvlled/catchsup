@@ -85,7 +85,7 @@ export function SettingsView() {
       <Space />
       <button onClick={handleImport}>import</button>
       <hr />
-      <h2>Usage limit</h2>
+      <h2>Daily Usage Limit</h2>
       Current value: {options.dailyLimit} minutes <br />
       New value
       <Space />

@@ -5,3 +5,8 @@
 .goal-view-start {
   padding: 10px 30px;
 }
+
+.goal-view-desc.truncate {
+  max-height: 100px;
+  overflow-y: hidden;
+}

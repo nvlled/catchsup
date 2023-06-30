@@ -1,7 +1,4 @@
 
-- check if current scheduled goal has auto schedule,
-  and check if there are any due goal that has a fixed time set
-
 - show on homepage the due goals with particular time set
 
 - update readme

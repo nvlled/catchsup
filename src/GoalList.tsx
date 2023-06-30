@@ -76,6 +76,7 @@ export default function GoalList({ goals }: Props) {
       {!DateNumber.sameDay(lastCompleted) &&
         !Scheduler.hasScheduledGoal(scheduler) &&
         !Scheduler.isNoDisturbMode(scheduler) &&
+        minutesUntilNextGoal > 0 &&
         goals.length > 0 && (
           <>
             <small>
@@ -107,7 +108,9 @@ export default function GoalList({ goals }: Props) {
               className={classes("goal-list-entry-marker ", dueStates[e.id])}
               title={
                 dueStates[e.id] === "due-now"
-                  ? "do now!?"
+                  ? "do now"
+                  : dueStates[e.id] === "available"
+                  ? "can do anytime today"
                   : dueStates[e.id] === "due-later"
                   ? "do later today"
                   : dueStates[e.id] === "was-due"
@@ -118,6 +121,8 @@ export default function GoalList({ goals }: Props) {
               {goalDueStateImages[dueStates[e.id]] &&
                 (dueStates[e.id] === "due-now"
                   ? "!"
+                  : dueStates[e.id] === "available"
+                  ? "."
                   : dueStates[e.id] === "due-later"
                   ? "@"
                   : dueStates[e.id] === "was-due"
@@ -149,7 +154,9 @@ export default function GoalList({ goals }: Props) {
   function handleRandomSelect() {
     const dueGoals = goals.filter((g) => {
       const state = Goal.checkDue(g);
-      return state === "due-now" || state === "was-due";
+      return (
+        state === "available" || state === "due-now" || state === "was-due"
+      );
     });
     const goal = ArrayUtil.randomSelect(dueGoals);
     if (goal) {

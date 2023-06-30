@@ -18,6 +18,7 @@ export interface Props {
 export default function GoalView({ goal }: Props) {
   const [edit, setEdit] = useState(false);
   const [resched, setResched] = useState(false);
+  const [truncateDesc, setTruncateDesc] = useState(false);
 
   const logs = useAppStore((state) =>
     state.trainingLogs.filter((g) => g.goalID === goal?.id)
@@ -82,7 +83,22 @@ export default function GoalView({ goal }: Props) {
         </>
       )}
       <br />
-      <div className="flex-center">
+      {goal.desc && (
+        <>
+          <div
+            className={"goal-view-desc " + (truncateDesc ? "truncate" : "")}
+            dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }}
+          />
+          {goal.desc.length > 100 && (
+            <a href="#" onClick={handleToggleDesc}>
+              <small>{truncateDesc ? "show more" : "show less"}</small>
+            </a>
+          )}
+        </>
+      )}
+      <br />
+      <div className="flex-center flex-col">
+        <small>{goal.trainingDuration} minutes</small>
         <button
           className="goal-view-start"
           onClick={() => Actions.startGoalTraining(goal)}
@@ -90,10 +106,6 @@ export default function GoalView({ goal }: Props) {
           start
         </button>
       </div>
-      <br />
-      {goal.desc && (
-        <div dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }} />
-      )}
       <br />
       {logs.length > 0 ? (
         <>
@@ -104,6 +116,10 @@ export default function GoalView({ goal }: Props) {
       ) : null}
     </div>
   );
+
+  function handleToggleDesc() {
+    setTruncateDesc(!truncateDesc);
+  }
 
   function handleResched(tempGoal?: Goal) {
     setResched(false);

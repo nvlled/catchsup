@@ -22,6 +22,7 @@ import { DailyLogs } from "./DailyLogs";
 import { ErrorView } from "./ErrorView";
 import { BackupsView } from "./BackupsView";
 import { typecheckMissedFields } from "../shared/assert";
+import { identityFn } from "../shared";
 
 function DailyLimit() {
   const [lastCompleted, logs, scheduler] = useAppStore((state) => [
@@ -49,36 +50,12 @@ function App() {
     const id = ++mountID;
     const services = createServices();
 
-    const unsubscribe = useAppStore.subscribe((state: State, prev: State) => {
-      let modified = false;
-      for (const k of Object.keys(state)) {
-        const name = k as keyof PersistentState;
-        switch (name) {
-          case "activeTraining":
-          case "backup":
-          case "goals":
-          case "lastCompleted":
-          case "nextGoalID":
-          case "scheduler": {
-            if (state[name] !== prev[name]) {
-              modified = true;
-            }
-            break;
-          }
-          default:
-            typecheckMissedFields(name);
-        }
-      }
-
-      if (modified) {
-        Actions.save({ waitInterval: true });
-      }
-    });
-
     //function onChange(state: State, _prev: State) {
     //  (window as any).appState = state;
     //}
     //const unsubscribe = useAppStore.subscribe(onChange);
+
+    let unsubscribe = identityFn;
 
     const mountTask = call(async () => {
       console.log("start mount", id);
@@ -87,6 +64,32 @@ function App() {
       if (!startupErrors) {
         await services.startAll();
       }
+
+      unsubscribe = useAppStore.subscribe((state: State, prev: State) => {
+        let modified = false;
+        for (const k of Object.keys(state)) {
+          const name = k as keyof PersistentState;
+          switch (name) {
+            case "activeTraining":
+            case "backup":
+            case "goals":
+            case "lastCompleted":
+            case "nextGoalID":
+            case "scheduler": {
+              if (state[name] !== prev[name]) {
+                modified = true;
+              }
+              break;
+            }
+            default:
+              typecheckMissedFields(name);
+          }
+        }
+
+        if (modified) {
+          Actions.save({ waitInterval: true });
+        }
+      });
 
       console.log("end mount", id);
     });
