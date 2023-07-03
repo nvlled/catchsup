@@ -4,7 +4,7 @@ import fsp from "fs/promises";
 import upath from "upath";
 import tmp from "tmp";
 
-import { Notification, Tray, app, dialog, nativeImage } from "electron";
+import { Notification, Tray, app, dialog, nativeImage, shell } from "electron";
 import { ForwardSlashPath, Urgency, devDataDir, storageName } from "../shared";
 import { mainWindow } from "./main";
 import { getIconPath } from "../shared/icon-names";
@@ -77,9 +77,19 @@ export const apiImpl = {
     }
   },
 
+  openExternal: async (path: string) => {
+    await shell.openExternal(path);
+  },
+
   showOpenDialog: dialog.showOpenDialog,
   showSaveDialog: dialog.showSaveDialog,
   showErrorBox: dialog.showErrorBox,
+
+  showItemInFolder: (path: string) => {
+    shell.showItemInFolder(path);
+  },
+
+  beep: () => shell.beep(),
 
   exportDataTo: async (filename: ForwardSlashPath) => {
     const sourceFile = apiImpl.withDataDir(storageName as ForwardSlashPath);

@@ -79,11 +79,15 @@ export function SettingsView() {
       <h2>Import/export data</h2>
       Data file path: {dataPath}
       <br />
-      <button onClick={handleExport}>export</button>
+      <button onClick={handleExportData}>export</button>
       <Space />
       <Space />
       <Space />
-      <button onClick={handleImport}>import</button>
+      <button onClick={handleImportData}>import</button>
+      <Space />
+      <Space />
+      <Space />
+      <button onClick={handleViewData}>view</button>
       <hr />
       <h2>Daily Usage Limit</h2>
       Current value: {options.dailyLimit} minutes <br />
@@ -114,7 +118,12 @@ export function SettingsView() {
     Actions.setNoDisturb(until as UnixTimestamp);
   }
 
-  async function handleImport() {
+  async function handleViewData() {
+    const dataPath = await api.withAbsoluteDataDir(storageName);
+    api.showItemInFolder(dataPath);
+  }
+
+  async function handleImportData() {
     const res = await api.showOpenDialog({
       title: "Select exported file",
     });
@@ -154,7 +163,7 @@ export function SettingsView() {
     }
   }
 
-  async function handleExport() {
+  async function handleExportData() {
     const res = await api.showSaveDialog({
       title: "Select file destination",
     });

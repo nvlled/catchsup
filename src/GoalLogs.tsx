@@ -7,7 +7,7 @@ import { UnixTimestamp } from "../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../shared/goal";
 import { produce } from "immer";
 import { Actions } from "./lib/actions";
-import { call, createPairSSet } from "./lib/jsext";
+import { call } from "./lib/jsext";
 import { Log, Logs } from "./lib/logs";
 
 export function GoalLogs({

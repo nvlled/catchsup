@@ -162,7 +162,8 @@ export const Scheduler = {
       2359 as TimeNumber,
       TimeNumber.current()
     );
-    const dueCount = goals.filter(Goal.isDueToday).length;
-    return (remainingMinutes / dueCount) as Minutes;
+    const dues = goals.filter(Goal.isDueToday);
+
+    return Math.ceil(remainingMinutes / dues.length) as Minutes;
   },
 };

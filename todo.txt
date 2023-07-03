@@ -1,11 +1,7 @@
 
-
-- open clicked link in app to an external browser
-
 - test on windows
 
-- some shitty landing page
-
+- make some shitty landing page
 
 - one more final fixes and simple polishes  
   - move git branch to mvp

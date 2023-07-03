@@ -17,9 +17,16 @@ export const apiStub = {
   mkdir: identityFn as PromisedReturn<typeof apiImpl.mkdir>,
   copyFiles: identityFn as PromisedReturn<typeof apiImpl.copyFiles>,
 
+  openExternal: identityFn as PromisedReturn<typeof apiImpl.openExternal>,
+
   showOpenDialog: identityFn as PromisedReturn<typeof apiImpl.showOpenDialog>,
   showSaveDialog: identityFn as PromisedReturn<typeof apiImpl.showSaveDialog>,
   showErrorBox: identityFn as PromisedReturn<typeof apiImpl.showErrorBox>,
+  showItemInFolder: identityFn as PromisedReturn<
+    typeof apiImpl.showItemInFolder
+  >,
+
+  beep: identityFn as PromisedReturn<typeof apiImpl.beep>,
 
   exportDataTo: identityFn as PromisedReturn<typeof apiImpl.exportDataTo>,
   importDataFrom: identityFn as PromisedReturn<typeof apiImpl.importDataFrom>,

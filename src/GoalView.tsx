@@ -11,6 +11,7 @@ import { DateNumber, TimeNumber, TrainingTime } from "../shared/datetime";
 import { GoalLogs } from "./GoalLogs";
 import { produce } from "immer";
 import { call } from "./lib/jsext";
+import { api } from "./lib/api";
 
 export interface Props {
   goal?: Goal;
@@ -18,7 +19,7 @@ export interface Props {
 export default function GoalView({ goal }: Props) {
   const [edit, setEdit] = useState(false);
   const [resched, setResched] = useState(false);
-  const [truncateDesc, setTruncateDesc] = useState(false);
+  const [truncateDesc, setTruncateDesc] = useState(true);
 
   const logs = useAppStore((state) =>
     state.trainingLogs.filter((g) => g.goalID === goal?.id)
@@ -86,10 +87,11 @@ export default function GoalView({ goal }: Props) {
       {goal.desc && (
         <>
           <div
+            ref={onMountDesc}
             className={"goal-view-desc " + (truncateDesc ? "truncate" : "")}
             dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }}
           />
-          {goal.desc.length > 100 && (
+          {goal.desc.length > 250 && (
             <a href="#" onClick={handleToggleDesc}>
               <small>{truncateDesc ? "show more" : "show less"}</small>
             </a>
@@ -116,6 +118,16 @@ export default function GoalView({ goal }: Props) {
       ) : null}
     </div>
   );
+
+  function onMountDesc(div: HTMLDivElement) {
+    if (!div) return;
+    for (const a of div.querySelectorAll("a")) {
+      a.onclick = (e: MouseEvent) => {
+        e.preventDefault();
+        api.openExternal(a.href);
+      };
+    }
+  }
 
   function handleToggleDesc() {
     setTruncateDesc(!truncateDesc);

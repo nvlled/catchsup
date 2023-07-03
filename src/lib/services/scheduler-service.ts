@@ -136,11 +136,12 @@ export function createSchedulerService() {
       scheduler.lastComplete = UnixTimestamp.current();
       scheduler.lastGoalID = scheduler.goal?.id ?? null;
       scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
+      api.setWindowTitle("");
+      updateSystrayIcon(draft);
+
       scheduler.scheduleInterval = Scheduler.getNextScheduleInterval(
         draft.goals
       );
-      api.setWindowTitle("");
-      updateSystrayIcon(draft);
     });
   }
 

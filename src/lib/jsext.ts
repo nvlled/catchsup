@@ -70,3 +70,9 @@ export function createPairSSet<A, B>(data?: [A, B][]) {
     return !!pairSet.get(x)?.has(y);
   }
 }
+
+export function sum(nums: number[]) {
+  let sum = 0;
+  for (const n of nums) sum += n;
+  return sum;
+}

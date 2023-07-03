@@ -76,6 +76,8 @@ function createWindow() {
     mainWindow.loadFile(path.join(process.env.DIST, "index.html"));
     mainWindow.setMaximumSize(640, 0);
   }
+
+  app.requestSingleInstanceLock();
 }
 
 function initFilesystem() {

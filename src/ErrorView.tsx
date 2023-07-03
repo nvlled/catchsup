@@ -34,9 +34,25 @@ export function ErrorView({ errors }: { errors: Error[] }) {
           Restore your data by copying your exported file to the data file. Also
           check the backup folder if there's any previous data file in there.
         </li>
-        <li>Data file: {dataDir + "/" + storageName}</li>
-        <li>Backup folder: {dataDir + "/" + backupDirName}</li>
+        <li>
+          Data file: {dataDir + "/" + storageName}{" "}
+          <button onClick={handleOpenDataFile}>open</button>
+        </li>
+        <li>
+          Backup folder: {dataDir + "/" + backupDirName}
+          <button onClick={handleOpenBackupDir}>open</button>
+        </li>
       </ul>
     </div>
   );
+
+  async function handleOpenDataFile() {
+    const dataPath = await api.withAbsoluteDataDir(storageName);
+    api.showItemInFolder(dataPath);
+  }
+
+  async function handleOpenBackupDir() {
+    const backupDir = await api.withAbsoluteDataDir(backupDirName);
+    api.showItemInFolder(backupDir);
+  }
 }

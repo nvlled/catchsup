@@ -7,6 +7,6 @@
 }
 
 .goal-view-desc.truncate {
-  max-height: 100px;
+  max-height: 230px;
   overflow-y: hidden;
 }
