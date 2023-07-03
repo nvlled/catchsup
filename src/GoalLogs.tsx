@@ -7,7 +7,7 @@ import { UnixTimestamp } from "../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../shared/goal";
 import { produce } from "immer";
 import { Actions } from "./lib/actions";
-import { call } from "./lib/jsext";
+import { call, createPairSSet } from "./lib/jsext";
 import { Log, Logs } from "./lib/logs";
 
 export function GoalLogs({
@@ -26,7 +26,10 @@ export function GoalLogs({
 
   useEffect(() => {
     call(async () => {
-      const [allLogs, errors] = await Logs.readAll(logs.map((l) => l.goalID));
+      const [allLogs, errors] = await Logs.readSelected(
+        logs.map((l) => [l.goalID, l.startTime])
+      );
+
       allLogs?.reverse();
       setAllLogs(allLogs);
       setErrors(errors);

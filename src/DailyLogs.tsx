@@ -16,12 +16,12 @@ export function DailyLogs() {
 
   const shownLogs = showAll
     ? logs
-    : logs.filter((l) =>
-        DateNumber.sameDay(
+    : logs.filter((l) => {
+        return DateNumber.sameDay(
           UnixTimestamp.toDateNumber(l.startTime),
           DateNumber.fromDate(date)
-        )
-      );
+        );
+      });
 
   return (
     <div>

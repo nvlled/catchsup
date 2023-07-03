@@ -67,10 +67,9 @@ export const Scheduler = {
     const [minimum, maximum] = [5 as Seconds, (15 * 60) as Seconds];
     const h = 7;
 
-    //const elapsed = Math.min(UnixTimestamp.since(goal.scheduledOn), h);
     const count = scheduler.notificationCount;
     // Make notifications more frequent as more time elapses
-    //const interval = min + (1 - elapsed / h) * (max - min);
+
     return (minimum + (1 - count / h) * (maximum - minimum)) as Seconds;
   },
 

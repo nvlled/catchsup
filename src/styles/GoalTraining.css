@@ -15,19 +15,6 @@
   margin-bottom: 15px;
 }
 
-.goal-training-spinner-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.goal-training-spinner {
-  animation: rotate 10s cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
-  display: inline-block;
-  font-size: 400%;
-}
-
 .goal-training-reward-text {
   font-size: 150%;
   color: #0d0;
@@ -38,9 +25,10 @@
     transform: rotate(0deg);
   }
   50% {
+    transform: rotate(360deg);
   }
 
   100% {
-    transform: rotate(360deg);
+    transform: rotate(-360);
   }
 }

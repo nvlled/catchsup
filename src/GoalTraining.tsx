@@ -17,6 +17,7 @@ export interface Props {
 type ConfirmState = "accept" | "reject" | "prompt";
 
 export function GoalTraining({ goal }: Props) {
+  const [spinner, setSpinner] = useState(Math.random() <= 0.45 ? 0 : 1);
   const [activeTraining, allLogs] = useAppStore((state) => [
     state.activeTraining,
     state.trainingLogs,
@@ -90,7 +91,7 @@ export function GoalTraining({ goal }: Props) {
               />
               <br />
               <em>
-                Note: Don't think too hard on what to write. Just write any
+                Tip: Don't think too hard on what to write. Just write any
                 detail that you think is notable. Keep it simple, write broken
                 english if you must, or just put a list of key words or phrases.
                 You can always put your full coherent thoughts somewhere else.
@@ -125,28 +126,11 @@ export function GoalTraining({ goal }: Props) {
                 now ongoing...
               </h2>
               <br />
-              <div className="goal-training-spinner-container">
-                <div
-                  className="goal-training-spinner"
-                  style={{
-                    color: "gold",
-                    position: "absolute",
-                    fontSize: "900%",
-                    bottom: "-10px",
-                  }}
-                >
-                  ✯
-                </div>
-                <div
-                  className=""
-                  style={{
-                    fontSize: "500%",
-                    zIndex: "10",
-                    position: "relative",
-                  }}
-                >
-                  🦍
-                </div>
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() => setSpinner((spinner + 1) % 2)}
+              >
+                {spinner === 0 ? <Spinner0 /> : <Spinner1 />}
               </div>
             </div>
           )}
@@ -187,4 +171,80 @@ export function GoalTraining({ goal }: Props) {
   function handleToggleNotifications() {
     Actions.toggleActiveTrainingNotifications();
   }
+}
+
+function Spinner0() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          color: "gold",
+          position: "absolute",
+          fontSize: "900%",
+          bottom: "-10px",
+
+          animation: "rotate 20s cubic-bezier(0.075, 0.82, 0.165, 1) infinite",
+          display: "inline-block",
+        }}
+      >
+        ✯
+      </div>
+      <div
+        className=""
+        style={{
+          fontSize: "500%",
+          zIndex: "10",
+          position: "relative",
+        }}
+      >
+        🦍
+      </div>
+    </div>
+  );
+}
+
+function Spinner1() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          color: "#0000CC",
+          position: "absolute",
+          fontSize: "800%",
+          fontWeight: 100,
+          bottom: "0px",
+
+          animation: "rotate 25s cubic-bezier(0.075, 0.82, 0.165, 1) infinite",
+          display: "inline-block",
+        }}
+      >
+        🍴
+      </div>
+      <div
+        className=""
+        style={{
+          fontSize: "500%",
+          zIndex: "10",
+          position: "relative",
+          transform: "rotate(45deg)",
+        }}
+      >
+        🦈
+      </div>
+    </div>
+  );
 }

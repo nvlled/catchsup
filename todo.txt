@@ -1,16 +1,13 @@
 
-- default example goals
 
-- update readme
+- open clicked link in app to an external browser
 
-- to add a cherry on top, make a shitty landing page too
-  - little diversion: try using nanojsx for cita.tsx
-  preactjs probably adds a lot on startup time and rendering time
-  maybe even try
-  https://jasonformat.com/wtf-is-jsx/
+- test on windows
+
+- some shitty landing page
+
 
 - one more final fixes and simple polishes  
-
   - move git branch to mvp
     and create clean main branch
     because I will most definitely be 

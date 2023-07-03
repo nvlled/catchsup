@@ -51,3 +51,22 @@ export const DateUtil = {
     )}`;
   },
 };
+
+export function createPairSSet<A, B>(data?: [A, B][]) {
+  const pairSet = new Map<A, Set<B>>();
+
+  if (data) {
+    for (const [x, y] of data) add([x, y]);
+  }
+
+  return { add, has };
+
+  function add([x, y]: [x: A, y: B]) {
+    if (!pairSet.has(x)) pairSet.set(x, new Set<B>());
+    pairSet.get(x)?.add(y);
+  }
+
+  function has([x, y]: [x: A, y: B]): boolean {
+    return !!pairSet.get(x)?.has(y);
+  }
+}

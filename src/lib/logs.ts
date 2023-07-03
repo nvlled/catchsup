@@ -2,6 +2,7 @@ import { ForwardSlashPath, logsDirName } from "../../shared";
 import { Minutes, UnixTimestamp } from "../../shared/datetime";
 import { GoalID } from "../../shared/goal";
 import { api } from "./api";
+import { createPairSSet } from "./jsext";
 
 export interface SerializedLog {
   startTime: UnixTimestamp;
@@ -74,6 +75,31 @@ export const Logs = {
       }
       return [null, new Error("failed to parse json")];
     }
+  },
+
+  async readSelected(
+    ids: [GoalID, UnixTimestamp][]
+  ): Promise<[Log[], null] | [null, Error[]]> {
+    if (ids.length === 0) return [[], null];
+
+    const pairSet = createPairSSet(ids);
+
+    const errors: Error[] = [];
+    const result: Log[] = [];
+    for (const id of new Set(ids.map((e) => e[0]))) {
+      const [logs, err] = await Logs.read(id);
+      if (err != null) {
+        errors.push(err);
+      } else {
+        result.push(
+          ...logs.filter((l) => pairSet.has([l.goalID, l.startTime]))
+        );
+      }
+    }
+    result.sort((a, b) => a.startTime - b.startTime);
+
+    if (errors.length > 0) return [null, errors];
+    return [result, null];
   },
 
   async readAll(goalIDs: GoalID[]): Promise<[Log[], null] | [null, Error[]]> {

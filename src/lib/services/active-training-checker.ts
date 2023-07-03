@@ -29,7 +29,6 @@ export function createActiveTrainingChecker() {
       const { activeTraining, goals, window } = useAppStore.getState();
 
       if (!activeTraining?.startTime) return;
-      if (activeTraining?.silenceNotification) return;
       if (activeTraining?.timeUp) return;
 
       const goal = goals.find((g) => g.id === activeTraining.goalID);
