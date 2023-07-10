@@ -1,5 +1,8 @@
 
-- test on windows
+
+- allow cancel even if time is up
+  for cases when there's a blackout
+  and I didn't get to do anything
 
 - make some shitty landing page
 

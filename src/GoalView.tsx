@@ -5,13 +5,11 @@ import { Goal } from "../shared/goal";
 import { useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
 import { GoalEditor } from "./GoalEditor";
-import { marked } from "marked";
-import { Space } from "./components";
+import { MarkdownContent, Space } from "./components";
 import { DateNumber, TimeNumber, TrainingTime } from "../shared/datetime";
 import { GoalLogs } from "./GoalLogs";
 import { produce } from "immer";
 import { call } from "./lib/jsext";
-import { api } from "./lib/api";
 
 export interface Props {
   goal?: Goal;
@@ -86,10 +84,9 @@ export default function GoalView({ goal }: Props) {
       <br />
       {goal.desc && (
         <>
-          <div
-            ref={onMountDesc}
+          <MarkdownContent
+            content={goal.desc}
             className={"goal-view-desc " + (truncateDesc ? "truncate" : "")}
-            dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }}
           />
           {goal.desc.length > 250 && (
             <a href="#" onClick={handleToggleDesc}>
@@ -118,16 +115,6 @@ export default function GoalView({ goal }: Props) {
       ) : null}
     </div>
   );
-
-  function onMountDesc(div: HTMLDivElement) {
-    if (!div) return;
-    for (const a of div.querySelectorAll("a")) {
-      a.onclick = (e: MouseEvent) => {
-        e.preventDefault();
-        api.openExternal(a.href);
-      };
-    }
-  }
 
   function handleToggleDesc() {
     setTruncateDesc(!truncateDesc);

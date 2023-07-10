@@ -33,8 +33,10 @@ export function SettingsView() {
 
   return (
     <div>
-      {Number.isFinite(secondsUntilNextNotif) && (
-        <small>next notification in {secondsUntilNextNotif}secs</small>
+      {Number.isFinite(secondsUntilNextNotif) && secondsUntilNextNotif > 0 && (
+        <small>
+          next notification in {Math.ceil(secondsUntilNextNotif)}secs
+        </small>
       )}
       <div className="flex-right">
         <button onClick={() => Actions.changePage("home")}>← back</button>
@@ -52,7 +54,7 @@ export function SettingsView() {
               onChange={(e) => setNoDisturbDuration(e.target.valueAsNumber)}
             />
             min
-            <br />
+            <Space count={3} />
             <button onClick={handleSubmitNoDisturb}>submit</button>
           </>
         ) : (
@@ -90,8 +92,6 @@ export function SettingsView() {
       <button onClick={handleViewData}>view</button>
       <hr />
       <h2>Daily Usage Limit</h2>
-      Current value: {options.dailyLimit} minutes <br />
-      New value
       <Space />
       <input
         size={2}
@@ -103,23 +103,25 @@ export function SettingsView() {
         }
       />
       minutes
-      <br />
-      <button onClick={handleSubmitDailyLimit}>save</button>
+      <Space count={3} />
+      <button onClick={handleSubmitDailyLimit}>submit</button>
     </div>
   );
 
   function handleSubmitDailyLimit() {
     Actions.setDailyLimit(dailyLimit);
+    Actions.changePage("home");
   }
 
   function handleSubmitNoDisturb() {
     const now = UnixTimestamp.current();
     const until = (now as number) + noDisturbDuration * 60;
     Actions.setNoDisturb(until as UnixTimestamp);
+    Actions.changePage("home");
   }
 
   async function handleViewData() {
-    const dataPath = await api.withAbsoluteDataDir(storageName);
+    const dataPath = await api.withAbsoluteDataDir();
     api.showItemInFolder(dataPath);
   }
 

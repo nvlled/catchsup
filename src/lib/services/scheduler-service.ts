@@ -140,6 +140,7 @@ export function createSchedulerService() {
       updateSystrayIcon(draft);
 
       scheduler.scheduleInterval = Scheduler.getNextScheduleInterval(
+        draft.scheduler,
         draft.goals
       );
     });

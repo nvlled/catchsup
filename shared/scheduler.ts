@@ -1,3 +1,4 @@
+import { sum } from "../src/lib/jsext";
 import {
   Minutes,
   Seconds,
@@ -157,13 +158,16 @@ export const Scheduler = {
     return (noDisturbUntil ?? 0) > UnixTimestamp.current();
   },
 
-  getNextScheduleInterval(goals: Goal[]): Minutes {
+  getNextScheduleInterval(scheduler: Scheduler, goals: Goal[]): Minutes {
     const remainingMinutes = TimeNumber.getDuration(
-      2359 as TimeNumber,
+      2200 as TimeNumber,
       TimeNumber.current()
     );
     const dues = goals.filter(Goal.isDueToday);
+    const limitPerDay = scheduler.options.dailyLimit;
+    const avgDuration = sum(dues.map((g) => g.trainingDuration)) / dues.length;
+    const dueCount = limitPerDay / avgDuration;
 
-    return Math.ceil(remainingMinutes / dues.length) as Minutes;
+    return Math.ceil(remainingMinutes / dueCount) as Minutes;
   },
 };

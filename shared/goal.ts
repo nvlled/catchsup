@@ -80,7 +80,7 @@ export interface Goal {
     date: DateNumber;
   };
 
-  trainingDuration: number; // minutes
+  trainingDuration: Minutes;
   overtime: number | undefined;
 
   durationOptions: {
@@ -142,7 +142,7 @@ export const Goal = {
 
       trainingTime: "auto",
 
-      trainingDuration: 15,
+      trainingDuration: 15 as Minutes,
       overtime: undefined,
 
       durationOptions: {
@@ -200,9 +200,9 @@ export const Goal = {
     const { autoAdjust, durationRange: range, scale } = goal.durationOptions;
     if (!autoAdjust) return;
 
-    duration += reps * scale;
-    duration = Math.max(duration, range.min);
-    duration = Math.min(duration, range.max);
+    duration = (duration + reps * scale) as Minutes;
+    duration = Math.max(duration, range.min) as Minutes;
+    duration = Math.min(duration, range.max) as Minutes;
 
     goal.trainingDuration = duration;
   },

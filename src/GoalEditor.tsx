@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useRef, useState } from "react";
-import { TrainingTime, WeekDay } from "../shared/datetime";
+import { Minutes, TrainingTime, WeekDay } from "../shared/datetime";
 import { Goal, GoalID, SchedulingType } from "../shared/goal";
 import { useOnMount } from "./lib/reactext";
 import { Actions } from "./lib/actions";
@@ -485,7 +485,9 @@ function TimeDurationEditor({ goal, onChange }: SubProps) {
   );
 
   function handleDurationChange(e: ChangeEvent<HTMLInputElement>) {
-    produceChange((draft) => (draft.trainingDuration = e.target.valueAsNumber));
+    produceChange(
+      (draft) => (draft.trainingDuration = e.target.valueAsNumber as Minutes)
+    );
   }
   function handleCooldownChange(e: ChangeEvent<HTMLInputElement>) {
     produceChange((draft) => (draft.overtime = e.target.valueAsNumber));

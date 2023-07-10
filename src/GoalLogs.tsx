@@ -1,8 +1,7 @@
 import "./styles/GoalLogs.css";
 
-import { marked } from "marked";
 import { useEffect, useRef, useState } from "react";
-import { Space } from "./components";
+import { MarkdownContent, Space } from "./components";
 import { UnixTimestamp } from "../shared/datetime";
 import { Goal, GoalID, TrainingLog } from "../shared/goal";
 import { produce } from "immer";
@@ -61,11 +60,11 @@ export function GoalLogs({
         // TODO: better if I use an ID, but startTime will do for now
         // since it's at least guaranteed unique per log entry
         const shown = shownIDs.has(e.startTime);
-        let html = e.notes && shown ? marked.parse(e.notes) : e.notes ?? "";
+        let markdown = e.notes && shown ? e.notes : e.notes ?? "";
         const maxlen = 250;
-        const tooLong = html.length > maxlen;
+        const tooLong = markdown.length > maxlen;
         if (!shown && tooLong) {
-          html = html.slice(0, maxlen) + "...";
+          markdown = markdown.slice(0, maxlen) + "...";
         }
         const d = UnixTimestamp.toDate(e.startTime);
         return (
@@ -101,11 +100,7 @@ export function GoalLogs({
               </div>
             ) : e.notes ? (
               <div className="goal-log-contents">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: html,
-                  }}
-                />
+                <MarkdownContent content={markdown} />
               </div>
             ) : null}
             {shown && (

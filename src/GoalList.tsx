@@ -6,7 +6,7 @@ import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
 
 import { getRandomQuote } from "./quotes";
-import { ArrayUtil, call, partition } from "./lib/jsext";
+import { call, partition } from "./lib/jsext";
 import { Actions } from "./lib/actions";
 import { DateNumber, UnixTimestamp } from "../shared/datetime";
 import { Scheduler } from "../shared/scheduler";
@@ -88,7 +88,8 @@ export default function GoalList({ goals }: Props) {
         )}
 
       <div className="flex-left">
-        <button onClick={handleRandomSelect}>random goal</button>
+        <button onClick={handleSelectNext}>next</button>
+        <button onClick={handleRandomSelect}>random</button>
         <Space count={5} />
         <a href="#" onClick={handleToggleShowAll}>
           {hideGoalList ? "show list" : "hide"}
@@ -151,17 +152,11 @@ export default function GoalList({ goals }: Props) {
     Actions.toggleGoalList();
   }
 
+  function handleSelectNext() {
+    Actions.scheduleNext();
+  }
   function handleRandomSelect() {
-    const dueGoals = goals.filter((g) => {
-      const state = Goal.checkDue(g);
-      return (
-        state === "available" || state === "due-now" || state === "was-due"
-      );
-    });
-    const goal = ArrayUtil.randomSelect(dueGoals);
-    if (goal) {
-      handleOpen(goal);
-    }
+    Actions.scheduleRandom();
   }
 
   function handleOpen(goal: Goal) {

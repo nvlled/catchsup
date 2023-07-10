@@ -23,6 +23,7 @@ import { storage } from "./storage";
 import { createFnMux } from "./fn-mux";
 import { api } from "./api";
 import { Logs } from "./logs";
+import { ArrayUtil } from "./jsext";
 
 const errNoDataFile = new Error("no data file found");
 
@@ -241,6 +242,24 @@ export const Actions = {
       const log = { ...state.trainingLogs[i], notes };
       Logs.update(log);
     }
+  },
+
+  scheduleNext() {
+    Actions.produceNextState((draft) => {
+      const { scheduler, goals } = draft;
+      scheduler.goal = Scheduler.findNextSchedule(scheduler, goals);
+    });
+  },
+  scheduleRandom() {
+    Actions.produceNextState((draft) => {
+      const dues = draft.goals.filter(Goal.isDueToday);
+      if (dues.length > 0) {
+        draft.scheduler.goal = {
+          id: ArrayUtil.randomSelect(dues).id,
+          scheduledOn: UnixTimestamp.current(),
+        };
+      }
+    });
   },
 
   /*

@@ -126,6 +126,7 @@ export function GoalTraining({ goal }: Props) {
                 now ongoing...
               </h2>
               <br />
+              <br />
               <div
                 style={{ cursor: "pointer" }}
                 onClick={() => setSpinner((spinner + 1) % 2)}
