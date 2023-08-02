@@ -6,6 +6,9 @@
   padding: 10px 30px;
 }
 
+.goal-view-desc {
+  word-wrap: break-word;
+}
 .goal-view-desc.truncate {
   max-height: 230px;
   overflow-y: hidden;
