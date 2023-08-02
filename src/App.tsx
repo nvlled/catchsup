@@ -17,7 +17,7 @@ import { api } from "./lib/api";
 import { Scheduler } from "../shared/scheduler";
 import { call } from "./lib/jsext";
 import { TrainingLog } from "../shared/goal";
-import { DateNumber } from "../shared/datetime";
+import { DateNumber, UnixTimestamp } from "../shared/datetime";
 import { DailyLogs } from "./DailyLogs";
 import { ErrorView } from "./ErrorView";
 import { BackupsView } from "./BackupsView";
@@ -143,11 +143,6 @@ function App() {
               <DailyLimit />
             </div>
             <div className="flex-right">
-              {Scheduler.isNoDisturbMode(scheduler) && (
-                <span>
-                  no disturb <Space />
-                </span>
-              )}
               <button onClick={() => Actions.changePage("settings")}>
                 settings
               </button>
@@ -159,6 +154,25 @@ function App() {
           </div>
           <br />
           <GoalList goals={goals} />
+          <div className="no-disturb-buttons">
+            no disturb for
+            {!Scheduler.isNoDisturbMode(scheduler) ? (
+              <>
+                <button onClick={() => handleSetNoDisturb(20)}>20m</button>
+                <button onClick={() => handleSetNoDisturb(35)}>35m</button>
+                <button onClick={() => handleSetNoDisturb(60)}>1h</button>
+              </>
+            ) : scheduler.noDisturbUntil ? (
+              <>
+                <Space />
+                {Math.floor(
+                  (scheduler.noDisturbUntil - UnixTimestamp.current()) / 60
+                )}
+                min
+                <button onClick={() => Actions.cancelNoDisturb()}>x</button>
+              </>
+            ) : null}
+          </div>
         </>
       ) : page === "backups" ? (
         <BackupsView />
@@ -187,15 +201,16 @@ function App() {
       ) : (
         <div>invalid appstate {page}</div>
       )}
-      {/*
-      <audio ref={audioRef} src="" controls />
-      <button onClick={handlePlay}>play sound</button>
-    */}
     </>
   );
 
   function handleGoalCreate() {
     Actions.changePage("home");
+  }
+  function handleSetNoDisturb(minutes: number) {
+    Actions.setNoDisturb(
+      (UnixTimestamp.current() + minutes * 60) as UnixTimestamp
+    );
   }
 }
 

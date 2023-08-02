@@ -10,3 +10,16 @@
 .logo:hover {
   transform: rotate(360deg);
 }
+
+.no-disturb-buttons {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  text-align: right;
+  font-size: 15px;
+  background-color: #ff4125;
+  padding: 10px;
+}
+.no-disturb-buttons > button {
+  margin-left: 5px;
+}
