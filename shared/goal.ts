@@ -524,7 +524,7 @@ It worked for me.
 
     {
       ...Goal.createEmpty(nextID++),
-      title: "Mediate",
+      title: "Meditate",
       desc: `
 Rules:
 - do nothing, close your eyes or distantly stare at something
