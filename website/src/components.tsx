@@ -36,15 +36,15 @@ export function Layout({
       <head>
         <meta charSet="utf8" />
         <title>Catchsup</title>
-        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="/style.css" />
         {head}
         {style && <style>{style}</style>}
       </head>
       <body>
         <div className="wrapper bg-red-dark p6">
           <div className="bg-dark flex align-between">
-            <a className="site-logo flex" href="index.tsx">
-              <img src="images/logo.png" style={{ width: "80px" }} />
+            <a className="site-logo flex" href="/">
+              <img src="/images/logo.png" style={{ width: "80px" }} />
               <h1 className="fg-light">catchsup</h1>
             </a>
             <MainNav />

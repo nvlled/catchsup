@@ -1,8 +1,8 @@
 {
   "imports": {
     "$base/": "./",
-    "php.ts": "https://deno.land/x/php_ts@v0.3.0/php.ts",
-    "css.tsx": "https://deno.land/x/php_ts@v0.3.0/css.tsx"
+    "php.ts": "https://deno.land/x/php_ts@v0.4.1/php.ts",
+    "css.tsx": "https://deno.land/x/php_ts@v0.4.1/css.tsx"
   },
   "compilerOptions": {
     "lib": [

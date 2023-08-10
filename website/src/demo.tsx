@@ -4,7 +4,9 @@ import { $ } from "php.ts";
 $(
   <Layout>
     <h2>Video demo</h2>
-    <video src="demo.mkv" controls style={{ width: "100%" }} />
+    <video controls style={{ width: "100%" }}>
+      <source src="demo.mkv" />
+    </video>
     <p>
       This is janky video I've made a with robotic text-to-speech voices,
       console terminals, and OBS.

@@ -1,3 +1,19 @@
+- fix remainingHours bug
+  looks like it only doesn't get immediately updated
+  after completing a goal
+
+- use svg icons for the spinner
+
+- break lines by words, not by letter
+- disable autoadjust on read book: pos
+- add visual interruption too
+  alternate between aural and visual
+
+- decrease available "no disturb" durations
+  for every click made by 60%,
+  this way I don't just keep clicking
+  no disturb for a whole day,
+  like what I did yesterday
 
 - allow cancel even if time is up
   for cases when there's a blackout
