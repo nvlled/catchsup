@@ -103,7 +103,7 @@ function Screenshot() {
       >
         ←
       </a>
-      <img src={"images/screenshots/" + images[imageIndex]} />
+      <img src={"/images/screenshots/" + images[imageIndex]} />
       <a
         href={`index.tsx?i=${
           imageIndex >= images.length - 1 ? 0 : imageIndex + 1
