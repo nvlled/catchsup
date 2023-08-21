@@ -11,7 +11,7 @@
 
 a {
   color: #090;
-  word-break: break-all;
+  word-break: normal;
 }
 a:visited {
   color: #060;

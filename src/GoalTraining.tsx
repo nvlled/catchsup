@@ -2,7 +2,7 @@ import "./styles/GoalTraining.css";
 import { Goal } from "../shared/goal";
 import { useAppStore } from "./lib/state";
 import { Actions } from "./lib/actions";
-import { Space } from "./components";
+import { MarkdownContent, Space } from "./components";
 import { useMemo, useRef, useState } from "react";
 import { UnixTimestamp } from "../shared/datetime";
 import { useOnMount, useTimer } from "./lib/reactext";
@@ -140,8 +140,9 @@ export function GoalTraining({ goal }: Props) {
           <hr />
 
           {goal.desc && (
-            <div
-              dangerouslySetInnerHTML={{ __html: marked.parse(goal.desc) }}
+            <MarkdownContent
+              content={goal.desc}
+              className={"goal-view-desc "}
             />
           )}
           {logs.length > 0 ? (
