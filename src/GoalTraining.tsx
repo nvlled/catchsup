@@ -9,6 +9,7 @@ import { useOnMount, useTimer } from "./lib/reactext";
 import { marked } from "marked";
 import { GoalLogs } from "./GoalLogs";
 import { Action } from "./lib/jsext";
+import { iconesJs } from "./lib/icons";
 
 export interface Props {
   goal: Goal | null | undefined;
@@ -190,23 +191,23 @@ function Spinner0() {
           color: "gold",
           position: "absolute",
           fontSize: "900%",
-          bottom: "-10px",
+          bottom: "10px",
 
           animation: "rotate 20s cubic-bezier(0.075, 0.82, 0.165, 1) infinite",
           display: "inline-block",
         }}
       >
-        ✯
+        {iconesJs.gamesIconNorthStarShuriken}
       </div>
       <div
         className=""
         style={{
-          fontSize: "500%",
+          fontSize: "600%",
           zIndex: "10",
           position: "relative",
         }}
       >
-        🦍
+        {iconesJs.notoGorilla}
       </div>
     </div>
   );
@@ -224,28 +225,26 @@ function Spinner1() {
     >
       <div
         style={{
-          color: "#0000CC",
           position: "absolute",
-          fontSize: "800%",
+          fontSize: "700%",
           fontWeight: 100,
-          bottom: "0px",
+          bottom: "50px",
 
-          animation: "rotate 25s cubic-bezier(0.075, 0.82, 0.165, 1) infinite",
+          animation: "rotate 20s cubic-bezier(0.075, 0.82, 0.165, 1) infinite",
           display: "inline-block",
         }}
       >
-        🍴
+        {iconesJs.gamesIconTrident}
       </div>
       <div
         className=""
         style={{
-          fontSize: "500%",
+          fontSize: "700%",
           zIndex: "10",
           position: "relative",
-          transform: "rotate(45deg)",
         }}
       >
-        🦈
+        {iconesJs.notoV1Shark}
       </div>
     </div>
   );
