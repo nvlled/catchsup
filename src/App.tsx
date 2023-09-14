@@ -43,6 +43,43 @@ function DailyLimit() {
   );
 }
 
+function NoDisturb() {
+  const scheduler = useAppStore((state) => state.scheduler);
+  const { noDisturb } = scheduler;
+
+  if (!Scheduler.hasScheduledGoal(scheduler)) {
+    return null;
+  }
+
+  return (
+    <div className="no-disturb-buttons">
+      no disturb for
+      {!scheduler.noDisturb.until ? (
+        [1, 2, 5, 15, 30, 60, 120].map((val) =>
+          noDisturb.selections.includes(val) ? null : (
+            <button key={val} onClick={() => handleSetNoDisturb(val)}>
+              {val < 60 ? `${val}m` : `${(val / 60).toFixed(1)}h`}
+            </button>
+          )
+        )
+      ) : (
+        <>
+          <Space />
+          {((scheduler.noDisturb.until - UnixTimestamp.current()) / 60).toFixed(
+            2
+          )}
+          min
+          <button onClick={() => Actions.cancelNoDisturb()}>x</button>
+        </>
+      )}
+    </div>
+  );
+
+  function handleSetNoDisturb(minutes: number) {
+    Actions.setNoDisturb(minutes);
+  }
+}
+
 let mountID = 0;
 let startupErrors: Error[] | null;
 
@@ -111,7 +148,7 @@ function App() {
     };
   });
 
-  const [page, goals, viewGoal, scheduler] = useAppStore((state) => [
+  const [page, goals, viewGoal] = useAppStore((state) => [
     state.page,
     state.goals,
     state.goals.find((e) => e.id === state.activeTraining?.goalID),
@@ -124,48 +161,6 @@ function App() {
         <ErrorView errors={startupErrors} />
       ) : page === "home" ? (
         <>
-          <div>
-            <button
-              onClick={() =>
-                api.updateDistractionWindow({
-                  action: "setVector",
-                  args: [0, -50],
-                })
-              }
-            >
-              up
-            </button>
-            <button
-              onClick={() =>
-                api.updateDistractionWindow({
-                  action: "setVector",
-                  args: [0, 50],
-                })
-              }
-            >
-              down
-            </button>
-            <button
-              onClick={() =>
-                api.updateDistractionWindow({
-                  action: "setVector",
-                  args: [-50, 0],
-                })
-              }
-            >
-              left
-            </button>
-            <button
-              onClick={() =>
-                api.updateDistractionWindow({
-                  action: "setVector",
-                  args: [50, 0],
-                })
-              }
-            >
-              right
-            </button>
-          </div>
           <div className="flex-between">
             <div className="flex-left">
               <a
@@ -191,25 +186,7 @@ function App() {
           </div>
           <br />
           <GoalList goals={goals} />
-          <div className="no-disturb-buttons">
-            no disturb for
-            {!Scheduler.isNoDisturbMode(scheduler) ? (
-              <>
-                <button onClick={() => handleSetNoDisturb(20)}>20m</button>
-                <button onClick={() => handleSetNoDisturb(35)}>35m</button>
-                <button onClick={() => handleSetNoDisturb(60)}>1h</button>
-              </>
-            ) : scheduler.noDisturbUntil ? (
-              <>
-                <Space />
-                {Math.floor(
-                  (scheduler.noDisturbUntil - UnixTimestamp.current()) / 60
-                )}
-                min
-                <button onClick={() => Actions.cancelNoDisturb()}>x</button>
-              </>
-            ) : null}
-          </div>
+          <NoDisturb />
         </>
       ) : page === "backups" ? (
         <BackupsView />
@@ -243,11 +220,6 @@ function App() {
 
   function handleGoalCreate() {
     Actions.changePage("home");
-  }
-  function handleSetNoDisturb(minutes: number) {
-    Actions.setNoDisturb(
-      (UnixTimestamp.current() + minutes * 60) as UnixTimestamp
-    );
   }
 }
 

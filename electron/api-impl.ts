@@ -44,22 +44,22 @@ export const apiImpl = {
     return app.getVersion();
   },
 
-  readFile: (filename: ForwardSlashPath) => {
-    return fs.readFileSync(filename, "utf-8");
+  readFile: async (filename: ForwardSlashPath) => {
+    return await fsp.readFile(filename, "utf-8");
   },
 
-  writeFile: (filename: ForwardSlashPath, data: string) => {
-    fs.writeFileSync(filename, data, "utf-8");
+  writeFile: async (filename: ForwardSlashPath, data: string) => {
+    await fsp.writeFile(filename, data, "utf-8");
   },
 
-  atomicWriteFile: (
+  atomicWriteFile: async (
     filename: ForwardSlashPath,
     data: string,
     tempFilename?: string
   ) => {
     tempFilename = posixPath(tempFilename ?? tmp.tmpNameSync());
-    fs.writeFileSync(tempFilename, data, "utf-8");
-    fs.renameSync(tempFilename, filename);
+    await fsp.writeFile(tempFilename, data, "utf-8");
+    await fsp.rename(tempFilename, filename);
   },
 
   deleteFile: (filename: ForwardSlashPath) => {

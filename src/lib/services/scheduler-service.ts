@@ -22,6 +22,7 @@ export function createSchedulerService() {
     Actions.produceNextState((draft) => {
       const { scheduler } = draft;
       if (!Scheduler.hasScheduledGoal(scheduler)) {
+        Scheduler.finishNoDisturb(draft.scheduler);
         draft.scheduler.goal = Scheduler.findNextSchedule(
           draft.scheduler,
           draft.goals
@@ -30,27 +31,33 @@ export function createSchedulerService() {
       updateSystrayIcon(draft);
 
       onUpdate();
-      draft.scheduler.intervalID = setInterval(onUpdate, 5 * 1000); // !!!!!
+      draft.scheduler.intervalID = setInterval(onUpdate, 20 * 1000);
 
       listenerID = events.on((_, e) => {
         switch (e.type) {
           case "settings-updated":
             onSettingsUpdated();
+            onUpdate();
             break;
           case "goal-started":
             onGoalStarted(e.id);
+            onUpdate();
             break;
           case "goal-finished":
             onGoalFinished(e.id);
+            onUpdate();
             break;
           case "goal-modified":
             onGoalModified(e.id);
+            onUpdate();
             break;
           case "goal-cancelled":
             onGoalCancelled(e.id);
+            onUpdate();
             break;
           case "goal-timeup":
             onGoalTimeUp(e.id);
+            onUpdate();
             break;
         }
       });
@@ -94,8 +101,8 @@ export function createSchedulerService() {
         );
       }
 
-      if (scheduler.noDisturbUntil && !Scheduler.isNoDisturbMode(scheduler)) {
-        scheduler.noDisturbUntil = null;
+      if (scheduler.noDisturb.until && !Scheduler.isNoDisturbMode(scheduler)) {
+        Scheduler.finishNoDisturb(scheduler);
         events.dispatch({ type: "no-disturb-change", isOn: false });
       }
     });
@@ -120,6 +127,7 @@ export function createSchedulerService() {
       scheduler.notificationCount = 0;
       scheduler.lastComplete = UnixTimestamp.current();
       scheduler.lastGoalID = scheduler.goal?.id ?? null;
+      scheduler.noDisturb.selections.splice(0);
 
       scheduler.scheduleInterval = Scheduler.getNextScheduleInterval(
         scheduler,
@@ -165,11 +173,19 @@ export function createSchedulerService() {
           hideShark();
           activeProc.start();
           inactiveProc.pause();
-        } else if (noDisturb() || !canNotify() || !hasScheduled()) {
-          hideShark();
-          inactiveProc.pause();
+
+          if ($.activeTraining?.silenceNotification) {
+            activeProc.pause();
+          } else {
+            activeProc.resume();
+          }
         } else {
-          inactiveProc.resume();
+          if (noDisturb() || !canNotify() || !hasScheduled()) {
+            hideShark();
+            inactiveProc.pause();
+          } else {
+            inactiveProc.resume();
+          }
         }
         yield;
       }
@@ -201,7 +217,7 @@ export function createSchedulerService() {
       }
 
       if (!cooldownOver()) {
-        Actions.playShortRewardSound(0.75);
+        Actions.playShortRewardSound(0.85);
         notifyStop();
 
         while (!cooldownOver()) {
@@ -217,7 +233,7 @@ export function createSchedulerService() {
 
         for (let i = 10; i > 1; i--) {
           notifyStop();
-          if (i % 2 === 0) Actions.playShortRewardSound(1 / i);
+          if (i % 2 === 0) Actions.playShortRewardSound(1 / (i / 2));
           yield* sleep(10 + i);
         }
 
@@ -238,7 +254,7 @@ export function createSchedulerService() {
         console.log("notification count", $.scheduler.notificationCount);
         yield* sleep(60 + Math.random() * 5 * 60);
         if (Math.random() < 0.2) {
-          Actions.playShortPromptSound(0.5);
+          Actions.playShortPromptSound(0.75);
         }
         notifyStart();
       }
@@ -253,7 +269,7 @@ export function createSchedulerService() {
 
         yield* sleep(3 * 60);
         notifyStart();
-        Actions.playShortPromptSound(0.75);
+        Actions.playShortPromptSound(0.85);
 
         yield* sleep(2 * 60);
         notifyStart();

@@ -19,12 +19,17 @@ export interface Scheduler {
 
   intervalID: NodeJS.Timer | undefined;
 
-  noDisturbUntil: UnixTimestamp | null;
   lastComplete: UnixTimestamp | null;
   lastNotify: UnixTimestamp | null;
   lastGoalID: GoalID | null;
   notificationCount: number;
   scheduleInterval: Minutes;
+
+  noDisturb: {
+    until: UnixTimestamp | null;
+    current: number;
+    selections: number[];
+  };
 
   options: {
     dailyLimit: Minutes;
@@ -38,12 +43,13 @@ export const Scheduler = {
 
       intervalID: undefined,
 
-      noDisturbUntil: null,
       lastGoalID: null,
       lastNotify: null,
       lastComplete: null,
       notificationCount: 0,
       scheduleInterval: 30 as Minutes,
+
+      noDisturb: { current: 0, until: null, selections: [] },
 
       options: {
         dailyLimit: Rules.defaults.dailyLimit,
@@ -150,10 +156,6 @@ export const Scheduler = {
     };
   },
 
-  isNoDisturbMode({ noDisturbUntil }: Scheduler) {
-    return (noDisturbUntil ?? 0) > UnixTimestamp.current();
-  },
-
   getNextScheduleInterval(scheduler: Scheduler, goals: Goal[]): Minutes {
     const remainingMinutes = TimeNumber.getDuration(
       2200 as TimeNumber,
@@ -165,5 +167,22 @@ export const Scheduler = {
     const dueCount = limitPerDay / avgDuration;
 
     return Math.ceil(remainingMinutes / dueCount) as Minutes;
+  },
+
+  isNoDisturbMode({ noDisturb }: Scheduler) {
+    return (noDisturb.until ?? 0) > UnixTimestamp.current();
+  },
+
+  setNoDisturb(scheduler: Scheduler, minutes: number) {
+    const time = (UnixTimestamp.current() + minutes * 60) as UnixTimestamp;
+    scheduler.noDisturb.until = time;
+    scheduler.noDisturb.current = minutes;
+  },
+
+  finishNoDisturb(scheduler: Scheduler) {
+    const { noDisturb } = scheduler;
+    noDisturb.until = null;
+    noDisturb.selections.push(noDisturb.current);
+    noDisturb.current = 0;
   },
 };

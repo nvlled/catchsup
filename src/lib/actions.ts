@@ -295,9 +295,9 @@ export const Actions = {
     });
   },
 
-  setNoDisturb(time: UnixTimestamp) {
+  setNoDisturb(minutes: number) {
     Actions.produceNextState((draft) => {
-      draft.scheduler.noDisturbUntil = time;
+      Scheduler.setNoDisturb(draft.scheduler, minutes);
     });
     events.dispatch({ type: "settings-updated" });
     events.dispatch({ type: "no-disturb-change", isOn: true });
@@ -305,7 +305,7 @@ export const Actions = {
 
   cancelNoDisturb() {
     Actions.produceNextState((draft) => {
-      draft.scheduler.noDisturbUntil = null;
+      draft.scheduler.noDisturb.until = null;
     });
     events.dispatch({ type: "settings-updated" });
     events.dispatch({ type: "no-disturb-change", isOn: false });

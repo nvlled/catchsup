@@ -14,11 +14,9 @@ import { Scheduler } from "../shared/scheduler";
 export function SettingsView() {
   const [scheduler] = useAppStore((state) => [state.scheduler]);
   const { options } = scheduler;
-  const [noDisturbDuration, setNoDisturbDuration] = useState(16);
   const [dailyLimit, setDailyLimit] = useState(options.dailyLimit);
 
   const [dataPath, setDataPath] = useState("");
-  const now = UnixTimestamp.current();
 
   useOnMount(() => {
     call(async () => {
@@ -41,6 +39,7 @@ export function SettingsView() {
       <div className="flex-right">
         <button onClick={() => Actions.changePage("home")}>← back</button>
       </div>
+      {/*
       <div className="no-disturb">
         <h2>Silence</h2>
         {!Scheduler.isNoDisturbMode(scheduler) ? (
@@ -61,7 +60,7 @@ export function SettingsView() {
           <>
             <em>
               No disturb for{" "}
-              {(((scheduler.noDisturbUntil ?? 0) - now) / 60).toFixed(1)}{" "}
+              {(((scheduler.noDisturb.until ?? 0) - now) / 60).toFixed(1)}{" "}
               minutes more
             </em>
             <Space />
@@ -69,7 +68,7 @@ export function SettingsView() {
             You will not get any notifications or interruptions until
             <Space />
             {UnixTimestamp.toDate(
-              scheduler.noDisturbUntil ?? UnixTimestamp.current()
+              scheduler.noDisturb.until ?? UnixTimestamp.current()
             )?.toLocaleTimeString()}
             <Space />
             <br />
@@ -78,6 +77,7 @@ export function SettingsView() {
         )}
       </div>
       <hr />
+      */}
       <h2>Import/export data</h2>
       Data file path: {dataPath}
       <br />
@@ -113,12 +113,10 @@ export function SettingsView() {
     Actions.changePage("home");
   }
 
-  function handleSubmitNoDisturb() {
-    const now = UnixTimestamp.current();
-    const until = (now as number) + noDisturbDuration * 60;
-    Actions.setNoDisturb(until as UnixTimestamp);
-    Actions.changePage("home");
-  }
+  //function handleSubmitNoDisturb() {
+  //  Actions.setNoDisturb(noDisturbDuration);
+  //  Actions.changePage("home");
+  //}
 
   async function handleViewData() {
     const dataPath = await api.withAbsoluteDataDir();
