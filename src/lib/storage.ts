@@ -10,6 +10,7 @@ export const storage = {
   },
   async setItem(name: string, value: string): Promise<void> {
     dataDir ??= await api.withDataDir();
+    console.log({ dataDir });
     const filename = (dataDir + "/" + name) as ForwardSlashPath;
     await api.atomicWriteFile(filename, value);
   },

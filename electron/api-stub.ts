@@ -5,6 +5,8 @@ type PromisedReturn<F extends IdentityFn> = (
   ...xs: Parameters<F>
 ) => Promise<ReturnType<F>>;
 
+type HasKeysOf<T> = Record<keyof T, any>;
+
 export const apiStub = {
   version: identityFn as PromisedReturn<typeof apiImpl.version>,
 
@@ -16,6 +18,7 @@ export const apiStub = {
   readDir: identityFn as PromisedReturn<typeof apiImpl.readDir>,
   mkdir: identityFn as PromisedReturn<typeof apiImpl.mkdir>,
   copyFiles: identityFn as PromisedReturn<typeof apiImpl.copyFiles>,
+  readDataDir: identityFn as PromisedReturn<typeof apiImpl.readDataDir>,
 
   openExternal: identityFn as PromisedReturn<typeof apiImpl.openExternal>,
 
@@ -54,6 +57,16 @@ export const apiStub = {
   openDevTools: identityFn as PromisedReturn<typeof apiImpl.openDevTools>,
 
   setWindowTitle: identityFn as PromisedReturn<typeof apiImpl.setWindowTitle>,
-} as const;
+
+  //dispatchAppEvent: identityFn as PromisedReturn<
+  //  typeof apiImpl.dispatchAppEvent
+  //>,
+  getScreenBounds: identityFn as PromisedReturn<typeof apiImpl.getScreenBounds>,
+  log: identityFn as PromisedReturn<typeof apiImpl.log>,
+
+  updateDistractionWindow: identityFn as PromisedReturn<
+    typeof apiImpl.updateDistractionWindow
+  >,
+} as const satisfies HasKeysOf<typeof apiImpl>;
 
 export type API = typeof apiStub;

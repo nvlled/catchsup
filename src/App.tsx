@@ -51,11 +51,6 @@ function App() {
     const id = ++mountID;
     const services = createServices();
 
-    //function onChange(state: State, _prev: State) {
-    //  (window as any).appState = state;
-    //}
-    //const unsubscribe = useAppStore.subscribe(onChange);
-
     let unsubscribe = identityFn;
 
     const mountTask = call(async () => {
@@ -129,6 +124,48 @@ function App() {
         <ErrorView errors={startupErrors} />
       ) : page === "home" ? (
         <>
+          <div>
+            <button
+              onClick={() =>
+                api.updateDistractionWindow({
+                  action: "setVector",
+                  args: [0, -50],
+                })
+              }
+            >
+              up
+            </button>
+            <button
+              onClick={() =>
+                api.updateDistractionWindow({
+                  action: "setVector",
+                  args: [0, 50],
+                })
+              }
+            >
+              down
+            </button>
+            <button
+              onClick={() =>
+                api.updateDistractionWindow({
+                  action: "setVector",
+                  args: [-50, 0],
+                })
+              }
+            >
+              left
+            </button>
+            <button
+              onClick={() =>
+                api.updateDistractionWindow({
+                  action: "setVector",
+                  args: [50, 0],
+                })
+              }
+            >
+              right
+            </button>
+          </div>
           <div className="flex-between">
             <div className="flex-left">
               <a

@@ -1,13 +1,21 @@
-import { AppEvent } from "../app-event";
 import { DateNumber, UnixTimestamp } from "../../../shared/datetime";
 import { Goal, GoalID } from "../../../shared/goal";
 import { Scheduler } from "../../../shared/scheduler";
 import { Actions } from "../actions";
-import { api } from "../api";
+import { api, events } from "../api";
 import { PersistentState, useAppStore } from "../state";
 import { Systray } from "../systray";
+import {
+  CoProcess,
+  CoroutineGenerator,
+  createProcess,
+  sleep,
+} from "../coroutine";
 
 export function createSchedulerService() {
+  const notifierProc = createProcess(notifier);
+  let listenerID = 0;
+
   return { start, stop };
 
   function start() {
@@ -21,25 +29,39 @@ export function createSchedulerService() {
       }
       updateSystrayIcon(draft);
 
-      draft.scheduler.intervalID = setInterval(onUpdate, 10 * 1000);
-      AppEvent.on("settings-updated", onSettingsUpdated);
-      AppEvent.on("goal-started", onGoalStarted);
-      AppEvent.on("goal-finished", onGoalFinished);
-      AppEvent.on("goal-modified", onGoalModified);
-      AppEvent.on("goal-cancelled", onGoalCancelled);
-      AppEvent.on("goal-timeup", onGoalTimeUp);
+      onUpdate();
+      draft.scheduler.intervalID = setInterval(onUpdate, 5 * 1000); // !!!!!
+
+      listenerID = events.on((_, e) => {
+        switch (e.type) {
+          case "settings-updated":
+            onSettingsUpdated();
+            break;
+          case "goal-started":
+            onGoalStarted(e.id);
+            break;
+          case "goal-finished":
+            onGoalFinished(e.id);
+            break;
+          case "goal-modified":
+            onGoalModified(e.id);
+            break;
+          case "goal-cancelled":
+            onGoalCancelled(e.id);
+            break;
+          case "goal-timeup":
+            onGoalTimeUp(e.id);
+            break;
+        }
+      });
     });
   }
 
   function stop() {
     const { scheduler } = useAppStore.getState();
     clearInterval(scheduler.intervalID);
-    AppEvent.off("settings-updated", onSettingsUpdated);
-    AppEvent.off("goal-started", onGoalStarted);
-    AppEvent.off("goal-finished", onGoalFinished);
-    AppEvent.off("goal-modified", onGoalModified);
-    AppEvent.off("goal-cancelled", onGoalCancelled);
-    AppEvent.off("goal-timeup", onGoalTimeUp);
+    events.off(listenerID);
+    notifierProc.stop();
   }
 
   function onSettingsUpdated() {
@@ -48,8 +70,10 @@ export function createSchedulerService() {
   }
 
   function onUpdate() {
+    notifierProc.next();
+
     Actions.produceNextState((draft) => {
-      const { goals, scheduler, activeTraining, window, screen } = draft;
+      const { goals, scheduler, activeTraining } = draft;
 
       updateSystrayIcon(draft);
 
@@ -70,48 +94,9 @@ export function createSchedulerService() {
         );
       }
 
-      if (UnixTimestamp.since(scheduler.lastNotify) > 2 * 60) {
-        api.requestWindowAttention(false);
-      }
-
-      const notify =
-        !window.focused &&
-        !screen.locked &&
-        !screen.suspended &&
-        !activeTraining?.startTime &&
-        !Scheduler.isNoDisturbMode(scheduler) &&
-        draft.lastCompleted != DateNumber.current() &&
-        Scheduler.hasScheduledGoal(scheduler);
-
-      if (notify && Scheduler.canNotifyStart(scheduler)) {
-        const { goals } = draft;
-        const goalID = scheduler.goal?.id;
-        const goal = goals.find((g) => g.id === goalID);
-        if (!goal) {
-          console.log("unknown goal ID", goalID);
-          api.showNotification("hey", "uh, hello");
-        } else {
-          Scheduler.updateNotificationData(scheduler);
-          api.showNotification(goal.title, goal.desc.slice(0, 200) ?? "hey");
-          api.requestWindowAttention(true);
-          api.setWindowTitle(goal.title);
-          Actions.playShortPromptSound();
-        }
-      }
-
-      if (
-        !activeTraining?.silenceNotification &&
-        activeTraining?.startTime &&
-        activeTraining.timeUp
-      ) {
-        const elapsed = UnixTimestamp.since(activeTraining.timeUp);
-        const cooldownOver =
-          elapsed / 60 > (activeTraining.cooldownDuration ?? 5);
-
-        if (cooldownOver && Scheduler.canNotifyStop(scheduler)) {
-          Scheduler.updateNotificationData(scheduler);
-          notifyStop();
-        }
+      if (scheduler.noDisturbUntil && !Scheduler.isNoDisturbMode(scheduler)) {
+        scheduler.noDisturbUntil = null;
+        events.dispatch({ type: "no-disturb-change", isOn: false });
       }
     });
   }
@@ -125,7 +110,7 @@ export function createSchedulerService() {
   }
 
   function onGoalTimeUp(_: GoalID) {
-    notifyStop();
+    // empty
   }
 
   function onGoalFinished(_goalID: GoalID) {
@@ -135,14 +120,15 @@ export function createSchedulerService() {
       scheduler.notificationCount = 0;
       scheduler.lastComplete = UnixTimestamp.current();
       scheduler.lastGoalID = scheduler.goal?.id ?? null;
-      scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
-      api.setWindowTitle("");
-      updateSystrayIcon(draft);
 
       scheduler.scheduleInterval = Scheduler.getNextScheduleInterval(
-        draft.scheduler,
+        scheduler,
         draft.goals
       );
+      scheduler.goal = Scheduler.findNextSchedule(scheduler, draft.goals);
+
+      api.setWindowTitle("");
+      updateSystrayIcon(draft);
     });
   }
 
@@ -168,26 +154,209 @@ export function createSchedulerService() {
     }
   }
 
-  function notifyStop() {
-    Systray.setIcon("time-up");
-    api.showNotification("time's up", "stop now");
-    api.requestWindowAttention(true);
-    Actions.playShortRewardSound();
-  }
+  function* notifier(this: CoProcess): CoroutineGenerator {
+    let $ = useAppStore.getState();
 
-  function updateSystrayIcon(state: PersistentState) {
-    const { scheduler, activeTraining, lastCompleted } = state;
-    if (activeTraining?.startTime) {
-      Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");
-    } else {
-      const doneForToday = lastCompleted == DateNumber.current();
-      Systray.setIcon(
-        Scheduler.hasScheduledGoal(scheduler) &&
-          !Scheduler.isNoDisturbMode(scheduler) &&
-          !doneForToday
-          ? "due-now"
-          : "blank"
+    this.create(function* () {
+      for (;;) {
+        $ = useAppStore.getState();
+
+        if (goalOngoing()) {
+          hideShark();
+          activeProc.start();
+          inactiveProc.pause();
+        } else if (noDisturb() || !canNotify() || !hasScheduled()) {
+          hideShark();
+          inactiveProc.pause();
+        } else {
+          inactiveProc.resume();
+        }
+        yield;
+      }
+    });
+
+    const listenerID = events.on((_, e) => {
+      switch (e.type) {
+        case "goal-started":
+          hideShark();
+          activeProc.restart();
+          inactiveProc.pause();
+          break;
+        case "goal-cancelled":
+          activeProc.stop();
+          inactiveProc.resume();
+          break;
+        case "goal-finished":
+          activeProc.stop();
+          inactiveProc.restart();
+          break;
+      }
+    });
+
+    this.defer(() => events.off(listenerID));
+
+    const activeProc = this.create(function* () {
+      while (!$.activeTraining?.timeUp) {
+        yield;
+      }
+
+      if (!cooldownOver()) {
+        Actions.playShortRewardSound(0.75);
+        notifyStop();
+
+        while (!cooldownOver()) {
+          yield;
+        }
+      }
+
+      Systray.setIcon("time-up");
+
+      for (;;) {
+        notifyStop();
+        yield* sleep(30 + Math.random() * 30);
+
+        for (let i = 10; i > 1; i--) {
+          notifyStop();
+          if (i % 2 === 0) Actions.playShortRewardSound(1 / i);
+          yield* sleep(10 + i);
+        }
+
+        yield;
+      }
+    });
+
+    const inactiveProc = this.create(function* () {
+      if ($.scheduler.notificationCount === 0) {
+        yield* sleep(15 * 60);
+        notifyStart();
+        Actions.playShortPromptSound(0.5);
+      } else {
+        notifyStart();
+      }
+
+      while ($.scheduler.notificationCount < 30) {
+        console.log("notification count", $.scheduler.notificationCount);
+        yield* sleep(60 + Math.random() * 5 * 60);
+        if (Math.random() < 0.2) {
+          Actions.playShortPromptSound(0.5);
+        }
+        notifyStart();
+      }
+
+      for (;;) {
+        yield* sleep(5 * 60);
+        notifyStart();
+        showShark({ size: 90, seconds: 30 });
+
+        yield* sleep(4 * 60);
+        notifyStart();
+
+        yield* sleep(3 * 60);
+        notifyStart();
+        Actions.playShortPromptSound(0.75);
+
+        yield* sleep(2 * 60);
+        notifyStart();
+
+        yield* sleep(1 * 60);
+        notifyStart();
+        showShark({ size: 200 });
+
+        for (let i = 0; i < 20; i++) {
+          yield* sleep(30 + Math.random() * 60);
+          notifyStart();
+          if (i % 2 !== 1) Actions.playShortPromptSound(1);
+
+          yield* sleep(30 + Math.random() * 60);
+          notifyStart();
+          showShark({ size: 250 + i * 3 });
+        }
+
+        Actions.playShortPromptSound(1);
+      }
+    });
+
+    activeProc.id = "*active";
+    inactiveProc.id = "*inactive";
+
+    activeProc.stop();
+    inactiveProc.start();
+
+    for (;;) yield;
+
+    // -----------------
+
+    function goalOngoing() {
+      return !!$.activeTraining?.startTime;
+    }
+
+    function canNotify() {
+      return (
+        !$.window.focused &&
+        !$.screen.locked &&
+        !$.screen.suspended &&
+        !$.activeTraining?.startTime &&
+        !Scheduler.isNoDisturbMode($.scheduler) &&
+        $.lastCompleted != DateNumber.current()
       );
     }
+
+    function hasScheduled() {
+      return Scheduler.hasScheduledGoal($.scheduler);
+    }
+    function noDisturb() {
+      return Scheduler.isNoDisturbMode($.scheduler);
+    }
+
+    function showShark({
+      size = 80,
+      seconds = 60,
+    }: { size?: number; seconds?: number } = {}) {
+      events.dispatch({ type: "start-distraction", seconds, size });
+    }
+    function hideShark() {
+      events.dispatch({ type: "stop-distraction" });
+    }
+
+    function notifyStart() {
+      const goal = $.goals.find((g) => g.id === $.scheduler.goal?.id);
+      if (goal) {
+        api.setWindowTitle(goal.title);
+        api.showNotification(goal.title, goal.desc.slice(0, 200) ?? "hey");
+        api.requestWindowAttention(true);
+      }
+      Actions.produceNextState((state) => {
+        Scheduler.updateNotificationData(state.scheduler);
+      });
+    }
+    function notifyStop() {
+      api.showNotification("time's up", "stop now");
+      api.requestWindowAttention(true);
+      api.setWindowTitle("time's up");
+      Actions.produceNextState((state) => {
+        Scheduler.updateNotificationData(state.scheduler);
+      });
+    }
+    function cooldownOver() {
+      if (!$.activeTraining) return true;
+      const elapsed = UnixTimestamp.since($.activeTraining.timeUp);
+      return elapsed / 60 > ($.activeTraining.cooldownDuration ?? 5);
+    }
+  }
+}
+
+function updateSystrayIcon(state: PersistentState) {
+  const { scheduler, activeTraining, lastCompleted } = state;
+  if (activeTraining?.startTime) {
+    Systray.setIcon(activeTraining.timeUp ? "time-up" : "ongoing");
+  } else {
+    const doneForToday = lastCompleted == DateNumber.current();
+    Systray.setIcon(
+      Scheduler.hasScheduledGoal(scheduler) &&
+        !Scheduler.isNoDisturbMode(scheduler) &&
+        !doneForToday
+        ? "due-now"
+        : "blank"
+    );
   }
 }

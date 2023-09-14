@@ -1,82 +1,66 @@
-import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
-import { apiImpl, getPublicPath } from "./api-impl";
-import { backupDirName, devDataDir, IdentityFn, logsDirName } from "../shared";
+import { app, ipcMain } from "electron";
+import { apiImpl } from "./api-impl";
+import { backupDirName, devDataDir, logsDirName } from "../shared";
 import { mkdirSync } from "fs";
 import { registerElectronEventHandlers } from "../src/lib/electron-events";
+import {
+  createDistractionWindow,
+  createMainWindow,
+  distractionWindow,
+  mainWindow,
+} from "./window";
+import { appEventChannel } from "../shared/app-event";
 
-export function createHandlers(
-  ns: string,
-  obj: Record<string, object | IdentityFn>
-) {
-  for (const [k, value] of Object.entries(obj)) {
-    if (typeof value === "function") {
-      ipcMain.handle(
-        ns + "." + k,
-        (_: Electron.IpcMainInvokeEvent, ...args: unknown[]) => value(...args)
-      );
-    } else {
-      createHandlers(
-        ns + "." + k,
-        value as Record<string, object | IdentityFn>
-      );
-    }
-  }
-}
-
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.js
-// │
 process.env.DIST = path.join(__dirname, "../dist");
 process.env.PUBLIC = app.isPackaged
   ? process.env.DIST
   : path.join(process.env.DIST, "../public");
 
-export let mainWindow: BrowserWindow | null;
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+export function createHandlers(ns: string, obj: object) {
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v === "function") {
+      //const res = await ipcRenderer.invoke(ns + "." + k, ...args);
+      ipcMain.handle(
+        ns + "." + k,
+        (_: Electron.IpcMainInvokeEvent, ...args: unknown[]) => {
+          //console.log("handle", ns + "." + k);
+          return v(...args);
+        }
+      );
+    } else if (typeof v === "object") {
+      createHandlers(ns + "." + k, v);
+    }
+  }
+}
 
-function createWindow() {
+ipcMain.handle(appEventChannel, (_, appEvent) => {
+  console.log("ipcMain handle", appEvent);
+  mainWindow?.webContents.send(appEventChannel, appEvent);
+  distractionWindow?.webContents.send(appEventChannel, appEvent);
+});
+
+//export function createDistractionHandlers() {
+//  ipcMain.handle("run-command", (e, cmd: Command) => {
+//    if (!distractionWindow) return;
+//    switch (cmd.type) {
+//      case "setWindowSpeed": {
+//        distractionWindow;
+//      }
+//    }
+//  });
+//}
+
+//function browserSend(browser: BrowserWindow, cmd: IPCMainEvent) {
+//  browser.webContents.send("command", cmd);
+//}
+
+function load() {
   initFilesystem();
   createHandlers("api", apiImpl);
   registerElectronEventHandlers();
-
-  mainWindow = new BrowserWindow({
-    title: "catchsup" + (app.isPackaged ? "" : "-dev"),
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
-  });
-
-  mainWindow.setIcon(getPublicPath() + "/icons/icon.png");
-
-  mainWindow.on("close", () => {
-    app.exit(0);
-  });
-
-  // Test active push message to Renderer-process.
-  mainWindow.webContents.on("did-finish-load", () => {
-    mainWindow?.webContents.send(
-      "main-process-message",
-      new Date().toLocaleString()
-    );
-  });
-
-  if (VITE_DEV_SERVER_URL) {
-    mainWindow.webContents.openDevTools();
-    mainWindow.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    // win.loadFile('dist/index.html')
-    mainWindow.loadFile(path.join(process.env.DIST, "index.html"));
-    mainWindow.setMaximumSize(640, 0);
-  }
-
+  createMainWindow();
+  createDistractionWindow();
   app.requestSingleInstanceLock();
 }
 
@@ -90,9 +74,9 @@ function initFilesystem() {
   mkdirSync(logsDir, { recursive: true });
 }
 
-app.on("window-all-closed", () => {
-  mainWindow = null;
-});
+//app.on("window-all-closed", () => {
+//  mainWindow = null;
+//});
 
-app.whenReady().then(createWindow);
+app.whenReady().then(load);
 app.applicationMenu = null;

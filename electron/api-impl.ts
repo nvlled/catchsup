@@ -4,10 +4,23 @@ import fsp from "fs/promises";
 import upath from "upath";
 import tmp from "tmp";
 
-import { Notification, Tray, app, dialog, nativeImage, shell } from "electron";
+import {
+  Notification,
+  Tray,
+  app,
+  dialog,
+  nativeImage,
+  screen,
+  shell,
+} from "electron";
 import { ForwardSlashPath, Urgency, devDataDir, storageName } from "../shared";
-import { mainWindow } from "./main";
 import { getIconPath } from "../shared/icon-names";
+import {
+  WindowMoverCommand as DistractionWindowCommand,
+  distractionWindow,
+  mainWindow,
+  windowMover,
+} from "./window";
 
 export function getPublicPath() {
   const publicPath = app.isPackaged
@@ -161,5 +174,52 @@ export const apiImpl = {
   setWindowTitle(title?: string) {
     if (mainWindow)
       mainWindow.title = !title ? app.name : title + " - " + app.name;
+  },
+
+  getScreenBounds() {
+    return screen.getPrimaryDisplay().bounds;
+  },
+
+  //dispatchAppEvent(event: AppEvent) {
+  //  mainWindow?.webContents.send(appEventChannel, event);
+  //  distractionWindow?.webContents.send(appEventChannel, event);
+  //},
+
+  log(...args: unknown[]) {
+    console.log(...args);
+  },
+
+  updateDistractionWindow(...commands: DistractionWindowCommand[]) {
+    for (const command of commands) {
+      switch (command.action) {
+        case "show": {
+          distractionWindow?.show();
+          break;
+        }
+        case "hide":
+          distractionWindow?.hide();
+          break;
+        case "start":
+          windowMover.start();
+          break;
+        case "stop":
+          windowMover.stop();
+          break;
+
+        case "setSize": {
+          const [w, h] = command.args;
+          windowMover[command.action](w, h);
+          break;
+        }
+
+        case "accelerate":
+        case "setPosition":
+        case "setVector": {
+          const [x, y] = command.args;
+          windowMover[command.action](x, y);
+          break;
+        }
+      }
+    }
   },
 };

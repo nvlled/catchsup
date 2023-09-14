@@ -1,7 +1,7 @@
 import { DateNumber, UnixTimestamp } from "../../../shared/datetime";
 import { Goal } from "../../../shared/goal";
 import { Actions } from "../actions";
-import { AppEvent } from "../app-event";
+import { events } from "../api";
 import { useAppStore } from "../state";
 
 export function createActiveTrainingChecker() {
@@ -41,7 +41,10 @@ export function createActiveTrainingChecker() {
 
       if (Goal.isTrainingDone(goal, activeTraining)) {
         Actions.goalTimeUp();
-        AppEvent.dispatch("goal-timeup", activeTraining.goalID);
+        events.dispatch({
+          type: "goal-timeup",
+          id: activeTraining.goalID,
+        });
       }
     }, 10 * 1000);
   }

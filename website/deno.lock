@@ -48,6 +48,8 @@
     "https://deno.land/x/php_ts@v0.4.1/php.ts": "1fe170f453f2f660c4322b312f3857cdd7c3cd71b013e8da8605e6ecf57cb87f",
     "https://deno.land/x/php_ts@v0.5.0/css.tsx": "926d2f9c7c5fe051dc78c22921f4ae7948f1cb5eca0f82df272bb22fd1c8213b",
     "https://deno.land/x/php_ts@v0.5.0/php.ts": "1fe170f453f2f660c4322b312f3857cdd7c3cd71b013e8da8605e6ecf57cb87f",
+    "https://deno.land/x/php_ts@v0.6.0/css.tsx": "926d2f9c7c5fe051dc78c22921f4ae7948f1cb5eca0f82df272bb22fd1c8213b",
+    "https://deno.land/x/php_ts@v0.6.0/php.ts": "60c829c9b4a44d81198b101be2ef973ae049dfde337e26cbb8589e4773935d5f",
     "https://esm.sh/jsdom@22.1.0": "c5d5cbc98a9f3a42300b8481ae50719eff51754e9ea78646cdea8c2e67a3ffce",
     "https://esm.sh/linkedom@0.14.22": "eae8be8f0a23f736a75a0eed73b9eaf55331c718313b45027e14cd1a834ef023",
     "https://esm.sh/v130/@tootallnate/once@2.0.0/denonext/once.mjs": "2c69d53dd1de1d7e5f9a78d46041f5d869f7d058f22d72e7f25821e61dddd147",

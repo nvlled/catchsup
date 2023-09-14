@@ -90,10 +90,6 @@ export const Scheduler = {
   updateNotificationData(scheduler: Scheduler) {
     scheduler.lastNotify = UnixTimestamp.current();
     scheduler.notificationCount++;
-
-    if (scheduler.notificationCount > 25) {
-      scheduler.notificationCount = 0;
-    }
   },
 
   hasScheduledGoal(scheduler: Scheduler) {

@@ -1,24 +1,8 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge } from "electron";
 import { apiStub } from "./api-stub";
+import { createInvokers } from "./preload-common";
 import { offElectronEvent, onElectronEvent } from "../src/lib/electron-events";
-
-function createInvokers(ns: string, obj: object) {
-  const result: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof v === "function") {
-      result[k] = async (...args: unknown[]) => {
-        console.log("@" + ns + "." + k);
-        const res = await ipcRenderer.invoke(ns + "." + k, ...args);
-        return await Promise.resolve(res);
-      };
-    } else if (typeof v === "object") {
-      result[k] = createInvokers(ns + "." + k, v);
-    } else {
-      result[k] = v;
-    }
-  }
-  return result;
-}
+import { appEventRegistry } from "../shared/app-event";
 
 function domReady(
   condition: DocumentReadyState[] = ["complete", "interactive"]
@@ -109,6 +93,7 @@ function useLoading() {
 contextBridge.exposeInMainWorld("api", createInvokers("api", apiStub));
 contextBridge.exposeInMainWorld("onElectronEvent", onElectronEvent);
 contextBridge.exposeInMainWorld("offElectronEvent", offElectronEvent);
+contextBridge.exposeInMainWorld("appEventRegistry", appEventRegistry);
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
 const { appendLoading, removeLoading } = useLoading();

@@ -6,7 +6,6 @@ import { MarkdownContent, Space } from "./components";
 import { useMemo, useRef, useState } from "react";
 import { UnixTimestamp } from "../shared/datetime";
 import { useOnMount, useTimer } from "./lib/reactext";
-import { marked } from "marked";
 import { GoalLogs } from "./GoalLogs";
 import { Action } from "./lib/jsext";
 import { iconesJs } from "./lib/icons";

@@ -18,10 +18,9 @@ import {
   getPersistentState,
 } from "./state";
 import { Audios } from "./audios";
-import { AppEvent } from "./app-event";
 import { storage } from "./storage";
 import { createFnMux } from "./fn-mux";
-import { api } from "./api";
+import { api, events } from "./api";
 import { Logs } from "./logs";
 import { ArrayUtil } from "./jsext";
 
@@ -76,6 +75,10 @@ export const Actions = {
 
     const { activeTraining } = useAppStore.getState();
     if (activeTraining?.startTime) {
+      events.dispatch({
+        type: "goal-started",
+        id: activeTraining.goalID,
+      });
       Actions.changePage("training");
     }
 
@@ -144,7 +147,7 @@ export const Actions = {
     });
     Actions.save();
 
-    AppEvent.dispatch("goal-modified", goal.id);
+    events.dispatch({ type: "goal-modified", id: goal.id });
   },
 
   cancelGoalTraining(goal: Goal) {
@@ -154,7 +157,7 @@ export const Actions = {
     });
     Actions.save();
 
-    AppEvent.dispatch("goal-cancelled", goal.id);
+    events.dispatch({ type: "goal-cancelled", id: goal.id });
   },
 
   startGoalTraining(goal: Goal) {
@@ -169,7 +172,7 @@ export const Actions = {
     });
     Actions.save();
 
-    AppEvent.dispatch("goal-started", goal.id);
+    events.dispatch({ type: "goal-started", id: goal.id });
   },
 
   toggleActiveTrainingNotifications() {
@@ -219,7 +222,7 @@ export const Actions = {
       notes,
     });
 
-    AppEvent.dispatch("goal-finished", goal.id);
+    events.dispatch({ type: "goal-finished", id: goal.id });
   },
 
   createGoal(goal: Goal) {
@@ -296,14 +299,16 @@ export const Actions = {
     Actions.produceNextState((draft) => {
       draft.scheduler.noDisturbUntil = time;
     });
-    AppEvent.dispatch("settings-updated");
+    events.dispatch({ type: "settings-updated" });
+    events.dispatch({ type: "no-disturb-change", isOn: true });
   },
 
   cancelNoDisturb() {
     Actions.produceNextState((draft) => {
       draft.scheduler.noDisturbUntil = null;
     });
-    AppEvent.dispatch("settings-updated");
+    events.dispatch({ type: "settings-updated" });
+    events.dispatch({ type: "no-disturb-change", isOn: false });
   },
 
   setDailyLimit(limit: Minutes) {
@@ -332,21 +337,26 @@ export const Actions = {
     await api.copyFiles(srcLogDir, destLogDir);
   },
 
-  playShortPromptSound() {
+  playShortPromptSound(volume = 1) {
     const sound = Audios.promptSoundShort;
-    return sound.play();
+    const id = sound.play();
+    sound.volume(volume, id);
+    return id;
   },
-  playShortRewardSound() {
+  playShortRewardSound(volume = 1) {
     const sound = Audios.rewardSoundShort;
-    return sound.play();
+    const id = sound.play();
+    sound.volume(volume, id);
+    return id;
   },
 
-  playPromptSound() {
+  playPromptSound(volume = 1) {
     const sound = Audios.promptSound;
     const id = sound.play();
 
     (async function () {
       const duration = 10 * 1000;
+      sound.volume(volume, id);
       sound.fade(1, 0, duration, id);
       await sleep(duration);
       sound.stop(id);
@@ -355,12 +365,13 @@ export const Actions = {
     return () => sound.stop(id);
   },
 
-  playRewardSound() {
+  playRewardSound(volume = 1) {
     const sound = Audios.rewardSound;
     const id = sound.play();
 
     (async function () {
       const duration = 15 * 1000;
+      sound.volume(volume, id);
       sound.seek(3);
       sound.fade(1, 0, duration, id);
       await sleep(duration);

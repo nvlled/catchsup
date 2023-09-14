@@ -1,31 +1,70 @@
-- fix remainingHours bug
-  looks like it only doesn't get immediately updated
-  after completing a goal
 
-- use svg icons for the spinner
+- good enough for enough
+  clean up code then commit 
+  then do no disturb buttons next
 
-- break lines by words, not by letter
-- disable autoadjust on read book: pos
-- add visual interruption too
-  alternate between aural and visual
+---------------------------------
 
+- do not show no-disturb when there is no active goal
 - decrease available "no disturb" durations
   for every click made by 60%,
   this way I don't just keep clicking
   no disturb for a whole day,
   like what I did yesterday
+  - hide cancel no-disturb after 1min of no-disturb period
+  - when a button is clicked, reset interrupt cycle back to start
 
-- allow cancel even if time is up
-  for cases when there's a blackout
-  and I didn't get to do anything
+  - buttons: 5min 15min 30min 1h 2h 
+  - 1h is clicked
+  - buttons: 5min 15min 30min 
+  - 15min is clicked
+  - buttons: 5min 30min 
+  - 30min is clicked
+  - buttons: 5min
+  - 15min is clicked
+  - buttons: --
 
-- make some shitty landing page
+- distraction window
+  - a shark that swims in the screen
+  - a gorilla head that floats around
+  - the window shows up briefly then hides
+  - the window should just be plain html,
+    and let the parent window control the child window
+    
+- states:
+  init_day, no_goal, scheduled_goal, started_goal, cooldown, end_goal
 
-- one more final fixes and simple polishes  
-  - move git branch to mvp
-    and create clean main branch
-    because I will most definitely be 
-    judged on my messy initial commits
+interruption progession cycle
+- n=notification, lvs=low vol sound, nvs=normal sound, sw=small window, bw=big window
+1.  n
+2.  n+lvs
+3.  n
+4.  n+sw
+5.  n
+6.  n+nvs
+7.  n
+8.  n+bw
+9.  n
+10. n+nvs+bw
+11. goto 5
+
+
+- convert schedulerService.onUpdate to a proper coroutine-ish state machine
+  - fix remainingHours bug
+    looks like it only doesn't get immediately updated
+    after completing a goal
+
+- maybe todo
+  - use sqlite
+  - use trpc/electron
+
+- volume adjust
+  - 
+
+- add visual interruption too
+  alternate between aural and visual
+  - for visual interruptions, just create another
+  window that moves around
 
 
 - show reward when limit has been passed
