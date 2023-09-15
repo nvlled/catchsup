@@ -82,7 +82,7 @@ export function createDistractionWindow() {
   });
   distractionWindow.setSkipTaskbar(true);
   distractionWindow.setVisibleOnAllWorkspaces(true);
-  //distractionWindow.focusable = false;
+  distractionWindow.hide();
 }
 
 function createWindowMover() {

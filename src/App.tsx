@@ -55,7 +55,7 @@ function NoDisturb() {
     <div className="no-disturb-buttons">
       no disturb for
       {!scheduler.noDisturb.until ? (
-        [1, 2, 5, 15, 30, 60, 120].map((val) =>
+        [5, 15, 30, 60, 120].map((val) =>
           noDisturb.selections.includes(val) ? null : (
             <button key={val} onClick={() => handleSetNoDisturb(val)}>
               {val < 60 ? `${val}m` : `${(val / 60).toFixed(1)}h`}

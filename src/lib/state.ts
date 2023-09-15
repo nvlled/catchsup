@@ -102,12 +102,20 @@ export function ensureValidState(state: State) {
     };
   }
 
-  const { noDisturb } = state.scheduler;
-  if (typeof noDisturb === "number" || !noDisturb) {
-    state.scheduler.noDisturb = { until: null, selections: [], current: 0 };
-  }
-  if (!noDisturb.selections) {
-    noDisturb.selections = [];
+  if (!state.scheduler.noDisturb) {
+    state.scheduler.noDisturb = {
+      until: null,
+      current: 0,
+      selections: [],
+    };
+  } else {
+    const { noDisturb } = state.scheduler;
+    if (typeof noDisturb === "number" || !noDisturb) {
+      state.scheduler.noDisturb = { until: null, selections: [], current: 0 };
+    }
+    if (!noDisturb.selections) {
+      noDisturb.selections = [];
+    }
   }
 
   return state;

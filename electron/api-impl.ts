@@ -198,6 +198,7 @@ export const apiImpl = {
         }
         case "hide":
           distractionWindow?.hide();
+          distractionWindow?.setPosition(-1000, -1000);
           break;
         case "start":
           windowMover.start();
