@@ -246,37 +246,40 @@ export function createSchedulerService() {
         yield* sleep(15 * 60);
         notifyStart();
         Actions.playShortPromptSound(0.5);
+        showShark({ size: 90, seconds: 10 });
       } else {
         notifyStart();
       }
 
-      while ($.scheduler.notificationCount < 30) {
-        console.log("notification count", $.scheduler.notificationCount);
+      while ($.scheduler.notificationCount < 10) {
         yield* sleep(60 + Math.random() * 5 * 60);
         if (Math.random() < 0.2) {
           Actions.playShortPromptSound(0.75);
         }
-        notifyStart();
+        if (Math.random() < 0.5) {
+          notifyStart();
+        }
+        showShark({ size: 90, seconds: 10 });
       }
 
       for (;;) {
-        yield* sleep(5 * 60);
-        notifyStart();
-        showShark({ size: 90, seconds: 30 });
-
         yield* sleep(4 * 60);
-        notifyStart();
+        showShark({ size: 90, seconds: 10 });
 
         yield* sleep(3 * 60);
-        notifyStart();
-        Actions.playShortPromptSound(0.85);
-
-        yield* sleep(2 * 60);
+        showShark({ size: 120, seconds: 20 });
         notifyStart();
 
         yield* sleep(1 * 60);
         notifyStart();
-        showShark({ size: 200 });
+        Actions.playShortPromptSound(0.85);
+
+        yield* sleep(2 * 60);
+        showShark({ size: 150, seconds: 20 });
+
+        yield* sleep(1 * 60);
+        notifyStart();
+        showShark({ size: 200, seconds: 20 });
 
         for (let i = 0; i < 20; i++) {
           yield* sleep(30 + Math.random() * 60);
@@ -285,7 +288,7 @@ export function createSchedulerService() {
 
           yield* sleep(30 + Math.random() * 60);
           notifyStart();
-          showShark({ size: 250 + i * 3 });
+          showShark({ size: 470 + i * 3, seconds: 10 });
         }
 
         Actions.playShortPromptSound(1);
