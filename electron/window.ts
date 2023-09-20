@@ -72,7 +72,7 @@ export function createDistractionWindow() {
 
   const url = VITE_DEV_SERVER_URL + "distraction.html";
   console.log("dev server URL", url);
-  distractionWindow.loadURL(url);
+
   distractionWindow.setSize(200, 200);
   //distractionWindow.webContents.openDevTools({ mode: "detach" });
   distractionWindow.on("close", (e) => {
@@ -83,6 +83,13 @@ export function createDistractionWindow() {
   distractionWindow.setSkipTaskbar(true);
   distractionWindow.setVisibleOnAllWorkspaces(true);
   distractionWindow.hide();
+
+  if (VITE_DEV_SERVER_URL) {
+    //distractionWindow.webContents.openDevTools();
+    distractionWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    distractionWindow.loadFile(path.join(process.env.DIST, "distraction.html"));
+  }
 }
 
 function createWindowMover() {
