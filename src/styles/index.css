@@ -11,10 +11,13 @@
 
 a {
   color: #090;
-  word-break: normal;
+  word-break: break-all;
 }
 a:visited {
   color: #060;
+}
+pre {
+  text-wrap: unset;
 }
 
 input,

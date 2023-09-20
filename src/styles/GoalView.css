@@ -7,7 +7,7 @@
 }
 
 .goal-view-desc {
-  word-wrap: break-word;
+  word-wrap: normal;
 }
 .goal-view-desc.truncate {
   max-height: 230px;

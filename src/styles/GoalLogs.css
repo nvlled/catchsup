@@ -16,7 +16,7 @@
 .goal-log-contents {
   border-left: 3px solid gray;
   padding-left: 10px;
-  word-break: break-all;
+  word-wrap: normal;
 }
 
 .goal-logs textarea {
