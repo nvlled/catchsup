@@ -22,7 +22,6 @@
   align-items: center;
 }
 .goal-list-entry.disabled {
-  color: #422;
 }
 
 .goal-list-entry:hover {
@@ -56,6 +55,10 @@
 
 .goal-list-entry-marker.was-due {
   color: #090;
+}
+.goal-list-entry-marker.disabled {
+  color: #900;
+  font-size: 11px;
 }
 
 .goal-list-due-goal {

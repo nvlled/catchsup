@@ -34,11 +34,19 @@ export default function GoalList({ goals }: Props) {
   useTimer(60 * 1000);
 
   const sortedGoals = call(() => {
-    const [otherGoals, disabledGoals] = partition(
-      hideGoalList ? [] : goals,
-      (g) => g.schedulingType !== "disabled"
-    );
-    return otherGoals.concat(disabledGoals);
+    if (hideGoalList) {
+      return goals.filter((g) => {
+        const state = Goal.checkDue(g);
+        if (scheduler.goal?.id === g.id) return false;
+        return state === "due-now" || state == "was-due";
+      });
+    } else {
+      const [otherGoals, disabledGoals] = partition(
+        goals,
+        (g) => g.schedulingType !== "disabled"
+      );
+      return otherGoals.concat(disabledGoals);
+    }
   });
 
   const goalID = scheduler.goal?.id;
@@ -92,7 +100,7 @@ export default function GoalList({ goals }: Props) {
         <button onClick={handleRandomSelect}>random</button>
         <Space count={5} />
         <a href="#" onClick={handleToggleShowAll}>
-          {hideGoalList ? "show list" : "hide"}
+          {hideGoalList ? "show all" : "hide"}
         </a>
       </div>
       <ul className="goal-list-entries">
@@ -106,9 +114,14 @@ export default function GoalList({ goals }: Props) {
             onClick={() => handleOpen(e)}
           >
             <div
-              className={classes("goal-list-entry-marker ", dueStates[e.id])}
+              className={classes(
+                "goal-list-entry-marker ",
+                e.schedulingType === "disabled" ? "disabled" : dueStates[e.id]
+              )}
               title={
-                dueStates[e.id] === "due-now"
+                e.schedulingType === "disabled"
+                  ? "not active / disabled"
+                  : dueStates[e.id] === "due-now"
                   ? "do now"
                   : dueStates[e.id] === "available"
                   ? "can do anytime today"
@@ -119,16 +132,17 @@ export default function GoalList({ goals }: Props) {
                   : "-"
               }
             >
-              {goalDueStateImages[dueStates[e.id]] &&
-                (dueStates[e.id] === "due-now"
-                  ? "!"
-                  : dueStates[e.id] === "available"
-                  ? "."
-                  : dueStates[e.id] === "due-later"
-                  ? "@"
-                  : dueStates[e.id] === "was-due"
-                  ? "?"
-                  : "-")}
+              {e.schedulingType === "disabled"
+                ? "x"
+                : dueStates[e.id] === "due-now"
+                ? "!"
+                : dueStates[e.id] === "available"
+                ? "."
+                : dueStates[e.id] === "due-later"
+                ? "@"
+                : dueStates[e.id] === "was-due"
+                ? "?"
+                : ""}
             </div>
             <Space />
             <div>{e.title}</div>
