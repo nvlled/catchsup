@@ -69,4 +69,5 @@
 .goal-list-due-goal a {
   color: #060;
   text-decoration: none;
+  word-break: normal;
 }

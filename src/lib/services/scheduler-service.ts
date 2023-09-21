@@ -288,7 +288,7 @@ export function createSchedulerService() {
 
           yield* sleep(30 + Math.random() * 60);
           notifyStart();
-          showShark({ size: 470 + i * 3, seconds: 10 });
+          showShark({ size: 470 + i * 3, seconds: 60 });
         }
 
         Actions.playShortPromptSound(1);
