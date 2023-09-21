@@ -64,6 +64,12 @@ export const apiStub = {
   getScreenBounds: identityFn as PromisedReturn<typeof apiImpl.getScreenBounds>,
   log: identityFn as PromisedReturn<typeof apiImpl.log>,
 
+  getMousePos: identityFn as PromisedReturn<typeof apiImpl.getMousePos>,
+
+  getDistractionWindowInfo: identityFn as PromisedReturn<
+    typeof apiImpl.getDistractionWindowInfo
+  >,
+
   updateDistractionWindow: identityFn as PromisedReturn<
     typeof apiImpl.updateDistractionWindow
   >,

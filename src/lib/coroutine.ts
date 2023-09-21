@@ -40,11 +40,10 @@ export function* waitAll(...gs: Generator[]) {
 }
 
 export function* awaited<T>(
-  p: Promise<T>,
-  defaultValue?: T | undefined
+  p: Promise<T>
 ): Generator<undefined, T | undefined, unknown> {
   let done = false;
-  let value: T | undefined = defaultValue;
+  let value: T | undefined = undefined;
   p.then((x: T) => {
     done = true;
     value = x;
