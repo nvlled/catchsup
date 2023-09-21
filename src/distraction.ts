@@ -5,7 +5,6 @@ import {
   CoroutineGenerator,
   awaited,
   createProcess,
-  sleep,
 } from "./lib/coroutine";
 
 export type Image = "shark" | "gorilla";
@@ -21,33 +20,6 @@ function getRandomStartPosition(screen: Electron.Rectangle) {
   const y = screen.y + screen.height * Math.random();
   const x = screen.x + screen.width * Math.random();
   return { x, y };
-}
-
-function getRandomDirection(scale: number) {
-  const v = {
-    x: -1 + Math.random() * 2,
-    y: -1 + Math.random() * 2,
-  };
-  const len = Math.sqrt(v.x * v.x + v.y * v.y);
-  v.x = (v.x / len) * scale;
-  v.y = (v.y / len) * scale;
-  return v;
-}
-
-function* changeDirection(v: { x: number; y: number }) {
-  if (v.x < 0) {
-    container?.classList.add("flipX");
-  } else {
-    container?.classList.remove("flipX");
-  }
-
-  yield* awaited(
-    api.updateDistractionWindow({
-      action: "setVector",
-      args: [v.x, v.y],
-    }),
-    null
-  );
 }
 
 function runCoroutine() {
@@ -90,7 +62,7 @@ function runCoroutine() {
       }
     }
     subproc.next();
-  }, 1000);
+  }, 128);
 
   return {
     stop() {
@@ -105,7 +77,7 @@ function* sharkCoroutine(
 ): CoroutineGenerator {
   this.defer(() => {
     api.log("coroutine exit");
-    api.updateDistractionWindow({ action: "hide" });
+    api.updateDistractionWindow({ action: "hide" }, { action: "stop" });
   });
 
   const screen = (yield* awaited(api.getScreenBounds())) ?? {
@@ -116,11 +88,8 @@ function* sharkCoroutine(
   };
 
   const startPos = getRandomStartPosition(screen);
-  const speed = 50;
-  let v = getRandomDirection(speed);
 
   const { winSize: size } = this.data;
-  api.log("shark", "init");
 
   yield* awaited(
     api.updateDistractionWindow(
@@ -129,20 +98,23 @@ function* sharkCoroutine(
         args: [startPos.x, startPos.y],
       },
       { action: "setSize", args: [size, size] },
+      { action: "start" },
       { action: "show" }
     )
   );
 
-  yield* changeDirection(v);
-  yield* sleep(2);
-
   while (true) {
-    api.log("shark", "loop");
-    for (let i = 0; i < 30 + Math.random() * 20; i++) {
-      v = getRandomDirection(speed);
-      yield* changeDirection(v);
-      yield* sleep(1 * Math.random() * 3);
+    const { vec } = (yield* awaited(api.getDistractionWindowInfo())) ?? {
+      pos: { x: 0, y: 0 },
+      vec: { x: 0, y: 0 },
+    };
+
+    if (vec.x < 0) {
+      container?.classList.add("flipX");
+    } else {
+      container?.classList.remove("flipX");
     }
+    yield;
   }
 }
 

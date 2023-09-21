@@ -189,6 +189,14 @@ export const apiImpl = {
     console.log(...args);
   },
 
+  getMousePos() {
+    return screen.getCursorScreenPoint();
+  },
+
+  getDistractionWindowInfo() {
+    return windowMover.getInfo();
+  },
+
   updateDistractionWindow(...commands: DistractionWindowCommand[]) {
     for (const command of commands) {
       switch (command.action) {
@@ -222,5 +230,6 @@ export const apiImpl = {
         }
       }
     }
+    return windowMover.getInfo();
   },
 };
