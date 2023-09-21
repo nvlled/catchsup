@@ -20,7 +20,7 @@ export function GoalLogs({
   const [editEntry, setEditEntry] = useState<UnixTimestamp | null>(null);
   const [allLogs, setAllLogs] = useState<Log[] | null>(null);
   const [errors, setErrors] = useState<Error[] | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const goalMap = Object.fromEntries(goals?.map((g) => [g.id, g]) ?? []);
 
   useEffect(() => {
@@ -95,7 +95,12 @@ export function GoalLogs({
                 <textarea
                   key={editEntry}
                   defaultValue={e.notes ?? ""}
-                  ref={textareaRef}
+                  ref={(ref) => {
+                    textareaRef.current = ref;
+                    if (ref) {
+                      ref.style.height = ref.scrollHeight + "px";
+                    }
+                  }}
                 />
               </div>
             ) : e.notes ? (

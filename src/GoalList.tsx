@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Space } from "./components";
-import { Goal, goalDueStateImages } from "../shared/goal";
+import { Goal } from "../shared/goal";
 import { classes, useChanged, useTimer } from "./lib/reactext";
 import { useAppStore } from "./lib/state";
 import "./styles/GoalList.css";
