@@ -166,7 +166,7 @@ export const Scheduler = {
     const avgDuration = sum(dues.map((g) => g.trainingDuration)) / dues.length;
     const dueCount = limitPerDay / avgDuration;
 
-    return Math.ceil(remainingMinutes / dueCount) as Minutes;
+    return Math.ceil((remainingMinutes * 0.7) / dueCount) as Minutes;
   },
 
   isNoDisturbMode({ noDisturb }: Scheduler) {
