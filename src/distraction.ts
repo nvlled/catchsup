@@ -135,3 +135,10 @@ async function main() {
 }
 
 window.addEventListener("load", main);
+
+window.onmouseover = () => {
+  document.body.classList.add("bordered");
+};
+window.onmouseout = () => {
+  document.body.classList.remove("bordered");
+};
