@@ -45,9 +45,19 @@ function DailyLimit() {
 
 function NoDisturb() {
   const scheduler = useAppStore((state) => state.scheduler);
-  const { noDisturb } = scheduler;
 
-  if (!Scheduler.hasScheduledGoal(scheduler)) {
+  if (!scheduler.noDisturb || !Scheduler.hasScheduledGoal(scheduler)) {
+    return null;
+  }
+
+  const choices = [5, 15, 30, 60, 120];
+  const maxNoDisturb = 180;
+  const selections = scheduler.noDisturb.selections;
+  //const selections = [30, 30, 30, 30];
+  const elapsed = selections.reduce((a, b) => a + b, 0);
+  const remaining = maxNoDisturb - elapsed;
+
+  if (choices.every((val) => val >= remaining)) {
     return null;
   }
 
@@ -55,8 +65,8 @@ function NoDisturb() {
     <div className="no-disturb-buttons">
       no disturb for
       {!scheduler.noDisturb.until ? (
-        [5, 15, 30, 60, 120].map((val) =>
-          noDisturb.selections.includes(val) ? null : (
+        choices.map((val) =>
+          val >= remaining ? null : (
             <button key={val} onClick={() => handleSetNoDisturb(val)}>
               {val < 60 ? `${val}m` : `${(val / 60).toFixed(1)}h`}
             </button>

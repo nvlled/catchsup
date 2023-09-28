@@ -95,16 +95,21 @@ export function createSchedulerService() {
       }
 
       if (!activeTraining?.startTime && (!hasScheduledGoal || reschedNonAuto)) {
+        draft.scheduler.noDisturb.until = null;
         scheduler.goal = Scheduler.findNextSchedule(
           draft.scheduler,
           draft.goals
         );
       }
 
-      if (scheduler.noDisturb.until && !Scheduler.isNoDisturbMode(scheduler)) {
-        Scheduler.finishNoDisturb(scheduler);
-        events.dispatch({ type: "no-disturb-change", isOn: false });
-      }
+      if (scheduler.noDisturb.current)
+        if (
+          scheduler.noDisturb.until &&
+          !Scheduler.isNoDisturbMode(scheduler)
+        ) {
+          Scheduler.finishNoDisturb(scheduler);
+          events.dispatch({ type: "no-disturb-change", isOn: false });
+        }
     });
   }
 
